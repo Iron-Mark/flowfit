@@ -27,6 +27,13 @@ dependencies:
   wearable_rotary: ^2.0.3
   logger: ^2.0.0               # Logging for debugging
   ultralytics_yolo: ^0.1.40
+  tflite_flutter: ^0.12.1
+  heart_bpm: ^2.0.0+0
+
+
+flutter:
+  assets:
+    - assets/model/activity_tracker.tflite
 
 dev_dependencies:
   flutter_test:

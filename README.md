@@ -335,6 +335,8 @@ flutter run -d <device-id>
 **📖 [Complete Documentation Index](docs/INDEX.md)** - Full list of all documentation
 
 ### 🚀 Quick Links
+- **[QUICK_START.md](QUICK_START.md)** - ⭐ **Start here!** Quick guide to run and test the app
+- **[NAVIGATION_GUIDE.md](docs/NAVIGATION_GUIDE.md)** - 🗺️ **How to access heart rate monitoring UI**
 - **[GETTING_STARTED.md](docs/GETTING_STARTED.md)** - Initial setup guide
 - **[WATCH_TO_PHONE_COMPLETE_FLOW.md](docs/WATCH_TO_PHONE_COMPLETE_FLOW.md)** - Live data flow from watch to phone
 - **[ALL_ISSUES_FIXED.md](docs/ALL_ISSUES_FIXED.md)** - Summary of all fixes applied

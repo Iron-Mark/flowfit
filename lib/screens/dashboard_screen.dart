@@ -240,12 +240,17 @@ class HomeTab extends StatelessWidget {
                         Colors.red,
                       ),
                     ),
-                    _buildQuickTrackCard(
-                      context,
-                      'Track Workout',
-                      'Start a new session',
-                      SolarIconsBold.running,
-                      Colors.blue,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/trackertest');
+                      },
+                      child: _buildQuickTrackCard(
+                        context,
+                        'Activity AI',
+                        'Test TFLite model',
+                        SolarIconsBold.cpu,
+                        Colors.deepPurple,
+                      ),
                     ),
                     _buildQuickTrackCard(
                       context,
@@ -267,6 +272,13 @@ class HomeTab extends StatelessWidget {
                       'Track your rest',
                       SolarIconsBold.moon,
                       Colors.purple,
+                    ),
+                    _buildQuickTrackCard(
+                      context,
+                      'Track Workout',
+                      'Start a new session',
+                      SolarIconsBold.running,
+                      Colors.blue,
                     ),
                   ],
                 ),

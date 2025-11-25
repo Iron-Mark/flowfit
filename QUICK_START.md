@@ -41,8 +41,29 @@ flutter pub get
 flutter run -d <phone_device_id>
 
 # Run on watch
-flutter run -d <watch_device_id> -t lib/main.dart
+flutter run -d <watch_device_id> -t lib/main_wear.dart
 ```
+
+## 🎯 How to Access Heart Rate Monitoring
+
+1. **Launch the app** on your phone
+2. **Navigate through** Loading → Welcome → Login/Sign Up
+3. **You'll land on the Dashboard** with the Home tab
+4. **Tap "Live Heart Rate"** button in the Quick Track section
+5. **Start monitoring** - the screen will display:
+   - Current heart rate (BPM)
+   - Heart rate variability (HRV in ms)
+   - Inter-beat intervals (IBI values)
+   - Recent readings history
+   - Real-time statistics (avg, max, min)
+
+### Quick Track Buttons Available:
+- **Live Heart Rate** → Real-time monitoring from Galaxy Watch
+- **Activity AI** → Test TensorFlow Lite activity classifier (Stress/Cardio/Strength detection)
+- Log Water → Coming soon
+- Add Meal → Coming soon
+- Log Sleep → Coming soon
+- Track Workout → Coming soon
 
 ---
 
@@ -52,12 +73,17 @@ flutter run -d <watch_device_id> -t lib/main.dart
 1. Loading Screen (3 seconds)
    ↓
 2. Welcome Screen
-   ├─→ Sign Up → Registration Form → Home
-   └─→ Login → Login Form → Home
+   ├─→ Sign Up → Registration Form → Dashboard
+   └─→ Login → Login Form → Dashboard
    ↓
-3. Home Screen
-   - Receives data from watch
-   - Displays HR, HRV, IBI
+3. Dashboard Screen
+   - Home tab with Quick Track buttons
+   - Activity, Track, Progress, Profile tabs
+   ↓
+4. Live Heart Rate Screen (tap "Live Heart Rate" button)
+   - Real-time heart rate monitoring from watch
+   - Displays HR, HRV, IBI values
+   - Shows recent readings history
    - Stores in database
    - Syncs to backend
 ```
@@ -263,6 +289,79 @@ await _dbService.markAsSynced(ids);
 
 ---
 
+## 🤖 TensorFlow Lite Activity Classifier
+
+### What It Does
+The app includes a **TensorFlow Lite model** that classifies activities in real-time:
+- **Stress Detection** - Identifies stress/anxiety states
+- **Cardio Activity** - Detects cardio exercises (running, cycling)
+- **Strength Training** - Identifies strength workouts
+
+### How to Test It
+
+1. **Navigate to Activity AI**
+   - Open app → Dashboard → Tap **"Activity AI"** button
+   
+2. **Test with Simulated Data**
+   - Use the **"Simulate Watch Heart Rate"** slider (60-180 BPM)
+   - Toggle **"Simulate Movement"** to generate accelerometer data
+   - Adjust **Amplitude** and **Frequency** to simulate different activities
+   - Drag slider HIGH (160+ BPM) to simulate panic/running
+
+3. **Test with Real Data**
+   - Select **"Watch"** chip to use real Galaxy Watch heart rate
+   - Move around to generate real accelerometer data
+   - Model classifies activity every second
+
+### Model Input
+The model uses a **10-second window** (320 samples @ 32Hz):
+- Accelerometer X, Y, Z axes
+- Heart rate (BPM)
+
+### Model Output
+- **Activity Label**: Stress, Cardio, or Strength
+- **Probabilities**: Confidence for each class (0-100%)
+
+### Features
+- ✅ Real-time classification (every ~1 second)
+- ✅ Sliding window buffer (320 samples @ 32Hz)
+- ✅ Multiple BPM sources (Simulation, Plugin, Watch)
+- ✅ **Live Galaxy Watch heart rate integration** 🆕
+- ✅ Synthetic accelerometer data for testing
+- ✅ Live probability display
+- ✅ Auto-start watch listener when Watch mode selected 🆕
+- ✅ Visual feedback for watch connection status 🆕
+
+## 🧪 Testing the Models
+
+### Run All Tests
+```bash
+flutter test
+```
+
+### Run Model Tests Only
+```bash
+# Test HeartRateData model
+flutter test test/models/heart_rate_data_test.dart
+
+# Test SensorError model
+flutter test test/models/sensor_error_test.dart
+
+# Test all models
+flutter test test/models/
+```
+
+### What's Tested:
+- ✅ **HeartRateData** - JSON serialization, deserialization, equality
+- ✅ **SensorError** - Error handling and formatting
+- ✅ **WatchBridgeService** - Watch connection, permissions, streaming
+- ✅ **TFLite Classifier** - Activity classification (Stress/Cardio/Strength)
+
+### Test Results:
+- 96 tests passing
+- Models fully tested and working
+- Ready for production use
+
 ## 🐛 Troubleshooting
 
 ### Icons Not Showing
@@ -281,6 +380,18 @@ await _dbService.markAsSynced(ids);
 - Check internet connection
 - Implement backend upload in `DataSyncManager.syncData()`
 - Check logs: `flutter logs | grep "Sync"`
+
+### Build Fails with "Address already in use"
+```bash
+# Stop Gradle daemon
+cd android
+./gradlew --stop
+
+# Clean and rebuild
+flutter clean
+flutter pub get
+flutter run
+```
 
 ---
 

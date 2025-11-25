@@ -146,6 +146,10 @@ class _TrackerPageState extends State<TrackerPage> {
       case BpmSource.Simulation:
         // Disconnect any external source and use manual slider bpm
         adapter.connectExternalStream(null);
+        setState(() {
+          _forceSimulate = true;
+          _currentBpmValue = null;
+        });
         break;
       case BpmSource.Plugin:
         // Plugin connection is managed by app (main.dart) or other init code.
@@ -154,19 +158,33 @@ class _TrackerPageState extends State<TrackerPage> {
         // Optionally, application initialization can call:
         // `context.read<HeartBpmAdapter>().connectExternalStream(HeartBpm.heartBpmStream);`
         // no-op: assume plugin is connected externally (e.g., main.dart or other)
+        setState(() {
+          _forceSimulate = false;
+        });
         break;
       case BpmSource.Watch:
-        // Use PhoneDataListener to get watch HR
+        // Use PhoneDataListener to get watch HR - START LISTENING FIRST!
         final phoneListener = Provider.of<PhoneDataListener>(context, listen: false);
+        
+        // Start listening for watch data
+        phoneListener.startListening();
+        
+        // Connect the watch heart rate stream to the adapter
         adapter.connectExternalStream(
-          phoneListener.heartRateStream.map((hr) => hr.bpm ?? 0),
+          phoneListener.heartRateStream.map((hr) => hr.bpm ?? 0).where((bpm) => bpm > 0),
         );
+        
+        setState(() {
+          _forceSimulate = false;
+        });
         break;
     }
 
     // Also locally subscribe to adapter stream to show current BPM in UI
     _bpmSub = adapter.bpmStream.listen((bpm) {
-      setState(() => _currentBpmValue = bpm);
+      if (mounted) {
+        setState(() => _currentBpmValue = bpm);
+      }
     });
 
     // Update plugin availability state (shows connected or not)
@@ -185,7 +203,19 @@ class _TrackerPageState extends State<TrackerPage> {
     final isLoading = viewModel.isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Anxiety Gap Demo')),
+      appBar: AppBar(
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Activity AI Classifier'),
+            Text(
+              'TensorFlow Lite Model',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+            ),
+          ],
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
@@ -216,32 +246,81 @@ class _TrackerPageState extends State<TrackerPage> {
 
             const SizedBox(height: 24),
 
-            // 3. The "Wizard of Oz" Control (simulate Heart Rate)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Simulate Watch Heart Rate: ${_simulatedHR.round()} BPM'),
-                const SizedBox(width: 12),
-                Column(
+            // 3. Heart Rate Source Display
+            if (_bpmSource == BpmSource.Watch && _currentBpmValue != null) ...[
+              // Show live watch heart rate
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.green, width: 2),
+                ),
+                child: Column(
                   children: [
-                    const Text('Use simulation'),
-                    Switch(
-                      value: _forceSimulate,
-                      onChanged: (v) => setState(() => _forceSimulate = v),
+                    const Text(
+                      '❤️ Live Watch Heart Rate',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$_currentBpmValue BPM',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Using real-time data from Galaxy Watch',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
-              ],
-            ),
-            Slider(
-              min: 60,
-              max: 180,
-              value: _simulatedHR,
-              onChanged: (val) => setState(() => _simulatedHR = val),
-              activeColor: Colors.red,
-            ),
-            const SizedBox(height: 4),
-            const Text('Drag slider HIGH to simulate Panic/Running'),
+              ),
+            ] else ...[
+              // Show simulation controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Simulate Heart Rate: ${_simulatedHR.round()} BPM'),
+                  const SizedBox(width: 12),
+                  Column(
+                    children: [
+                      const Text('Use simulation'),
+                      Switch(
+                        value: _forceSimulate,
+                        onChanged: _bpmSource == BpmSource.Simulation 
+                          ? (v) => setState(() => _forceSimulate = v)
+                          : null, // Disable when not in simulation mode
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Slider(
+                min: 60,
+                max: 180,
+                value: _simulatedHR,
+                onChanged: _bpmSource == BpmSource.Simulation
+                  ? (val) => setState(() => _simulatedHR = val)
+                  : null, // Disable when not in simulation mode
+                activeColor: Colors.red,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _bpmSource == BpmSource.Simulation
+                  ? 'Drag slider HIGH to simulate Panic/Running'
+                  : 'Switch to Simulation mode to use slider',
+                style: TextStyle(
+                  color: _bpmSource == BpmSource.Simulation ? Colors.black : Colors.grey,
+                ),
+              ),
+            ],
 
             const SizedBox(height: 12),
             // Simulate movement toggle and controls
@@ -339,20 +418,85 @@ class _TrackerPageState extends State<TrackerPage> {
             ],
 
             const SizedBox(height: 12),
-            // Display plugin/watch connection status
-            if (_bpmSource == BpmSource.Plugin) ...[
-              Text(
-                _pluginAvailable ? 'Plugin connected' : 'Plugin not connected',
-                style: TextStyle(color: _pluginAvailable ? Colors.green : Colors.orange),
+            // Display connection status
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-            ] else if (_bpmSource == BpmSource.Watch) ...[
-              Text(
-                _currentBpmValue != null
-                    ? 'Watch BPM: $_currentBpmValue'
-                    : 'Watch not connected',
-                style: TextStyle(color: _currentBpmValue != null ? Colors.green : Colors.orange),
+              child: Column(
+                children: [
+                  if (_bpmSource == BpmSource.Plugin) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _pluginAvailable ? Icons.check_circle : Icons.error,
+                          color: _pluginAvailable ? Colors.green : Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _pluginAvailable ? 'Plugin connected' : 'Plugin not connected',
+                          style: TextStyle(
+                            color: _pluginAvailable ? Colors.green : Colors.orange,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (_bpmSource == BpmSource.Watch) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _currentBpmValue != null ? Icons.watch : Icons.watch_off,
+                          color: _currentBpmValue != null ? Colors.green : Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _currentBpmValue != null
+                              ? '✓ Galaxy Watch Connected'
+                              : '⚠ Waiting for watch data...',
+                          style: TextStyle(
+                            color: _currentBpmValue != null ? Colors.green : Colors.orange,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_currentBpmValue == null) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Make sure watch is sending heart rate data',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ] else if (_bpmSource == BpmSource.Simulation) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.science,
+                          color: Colors.blue,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Using simulated heart rate: ${_simulatedHR.round()} BPM',
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
           ],
         ),
       ),

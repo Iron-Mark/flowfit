@@ -68,3 +68,14 @@
 /// - Copilot instructions: .github/copilot-instructions.md
 /// - Sensor bridge: lib/services/watch_bridge.dart (for heart rate data)
 /// - Domain models: lib/models/ (cross-feature models)
+
+/// Heart BPM integration
+/// - The tracker UI prefers a simulated BPM value (mock slider) by default to make demos and testing consistent.
+/// - To use a hardware source, connect the `HeartBpm` plugin's stream to the `HeartBpmAdapter` in `main.dart`, e.g.:
+///
+/// ```dart
+/// final adapter = context.read<HeartBpmAdapter>();
+/// adapter.connectExternalStream(HeartBpm.heartBpmStream);
+/// ```
+///
+/// If the external stream provides values, the adapter will publish them and `TrackerPage` will use them.

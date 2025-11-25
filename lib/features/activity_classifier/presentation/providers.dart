@@ -74,6 +74,17 @@ class ActivityClassifierViewModel with ChangeNotifier {
 //   child: MyApp(),
 // )
 //
+// Optional: Heart BPM integration (plugin or watch)
+// - Add `Provider<HeartBpmAdapter>` and `Provider<PhoneDataListener>` in `main.dart`
+// - To connect a plugin stream in your app initialization, do:
+//
+// WidgetsBinding.instance.addPostFrameCallback((_) {
+//   final adapter = context.read<HeartBpmAdapter>();
+//   // If the plugin exports a stream called `heartBpmStream`, connect it:
+//   // adapter.connectExternalStream(HeartBpm.heartBpmStream);
+// });
+//
+//
 // USAGE: In widgets:
 //
 // // Read current activity

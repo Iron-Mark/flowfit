@@ -9,7 +9,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -112,7 +112,8 @@ class WelcomeScreen extends StatelessWidget {
                   height: 56,
                   child: OutlinedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/login');
+                      // Navigator.pushNamed(context, '/login');
+                      Navigator.pushNamed(context, '/trackertest');
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,

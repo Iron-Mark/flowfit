@@ -91,7 +91,7 @@ void main() {
     test('classify activity successfully with valid buffer', () async {
       final validBuffer = List.generate(
         320,
-        (_) => [1.5, 2.3, 0.8, 72.0], // [accX, accY, accZ, bpm]
+        (_) => [1.5, 2.3, 0.8, 90.0], // [accX, accY, accZ, bpm] - HR >= 85 to allow AI
       );
 
       mockRepository.nextPrediction = [0.1, 0.8, 0.1]; // Cardio is highest
@@ -105,7 +105,7 @@ void main() {
     });
 
     test('classify Stress activity', () async {
-      final buffer = List.generate(320, (_) => [1.0, 1.0, 1.0, 60.0]);
+      final buffer = List.generate(320, (_) => [1.0, 1.0, 1.0, 90.0]);
       mockRepository.nextPrediction = [0.9, 0.05, 0.05]; // Stress is highest
 
       final result = await useCase.execute(buffer);
@@ -125,13 +125,24 @@ void main() {
     });
 
     test('handle repository errors gracefully', () async {
-      final buffer = List.generate(320, (_) => [1.0, 2.0, 3.0, 4.0]);
+      final buffer = List.generate(320, (_) => [1.0, 2.0, 3.0, 120.0]);
       mockRepository.nextPrediction = null; // This will throw
 
       expect(
         () => useCase.execute(buffer),
         throwsA(isA<StateError>()),
       );
+    });
+
+    test('short-circuit to Calm when bpm < 85', () async {
+      final calmbuffer = List.generate(320, (_) => [0.0, 0.0, 0.0, 70.0]);
+      // Ensure repository not called
+      mockRepository.nextPrediction = [0.1, 0.1, 0.8];
+
+      final result = await useCase.execute(calmbuffer);
+      expect(result.label, equals('Calm'));
+      expect(result.probabilities, equals([0.0, 0.0, 0.0]));
+      expect(mockRepository.callCount, equals(0));
     });
   });
 

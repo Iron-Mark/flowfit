@@ -26,6 +26,8 @@ import 'screens/onboarding/survey_activity_goals_screen.dart';
 import 'screens/onboarding/survey_daily_targets_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/font_demo_screen.dart';
+import 'widgets/debug_route_menu.dart';
 
 void main() {
   runApp(const ProviderScope(child: FlowFitPhoneApp()));
@@ -36,6 +38,11 @@ class FlowFitPhoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String initialRoute = const String.fromEnvironment(
+      'INITIAL_ROUTE',
+      defaultValue: '/',
+    );
+
     return MultiProvider(
       providers: [
         Provider<HeartBpmAdapter>(create: (_) => HeartBpmAdapter()),
@@ -54,8 +61,9 @@ class FlowFitPhoneApp extends StatelessWidget {
         ),
         // Domain layer (use ActivityClassifierRepository abstract type)
         ProxyProvider<ActivityClassifierRepository, ClassifyActivityUseCase>(
-          create: (context) =>
-              ClassifyActivityUseCase(context.read<ActivityClassifierRepository>()),
+          create: (context) => ClassifyActivityUseCase(
+            context.read<ActivityClassifierRepository>(),
+          ),
           update: (_, repository, __) => ClassifyActivityUseCase(repository),
         ),
 
@@ -70,13 +78,25 @@ class FlowFitPhoneApp extends StatelessWidget {
           update: (_, useCase, __) => ActivityClassifierViewModel(useCase),
         ),
       ],
+      // Read an optional compile-time environment variable `INITIAL_ROUTE`.
+      // This allows developers to quickly jump to a route when running the app
+      // without editing code. Example:
+      // flutter run -d <device-id> -t lib/main.dart --dart-define=INITIAL_ROUTE=/font-demo
       child: MaterialApp(
+        // Wrap the app's child with a debug overlay (Floating debug menu)
+        builder: (context, child) => Stack(
+          children: [
+            if (child != null) child,
+            // Show the debug route menu only in debug builds.
+            const DebugRouteMenu(),
+          ],
+        ),
         title: 'FlowFit',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        initialRoute: '/',
+        initialRoute: initialRoute,
         routes: {
           '/': (context) => const LoadingScreen(),
           '/welcome': (context) => const WelcomeScreen(),
@@ -98,6 +118,7 @@ class FlowFitPhoneApp extends StatelessWidget {
           '/mission': (context) => const MapsPageWrapper(),
           '/home': (context) => const PhoneHomePage(),
           '/phone_heart_rate': (context) => const PhoneHeartRateScreen(),
+          '/font-demo': (context) => const FontDemoScreen(),
         },
       ),
     );

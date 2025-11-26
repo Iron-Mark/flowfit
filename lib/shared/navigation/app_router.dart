@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flowfit/features/wellness/presentation/maps_page_wrapper.dart';
+import 'package:flowfit/screens/font_demo_screen.dart';
 
 /// Application router configuration using go_router
-/// 
+///
 /// This file defines all routes and navigation flows for the FlowFit app.
 /// Routes are organized by feature and support nested navigation.
 class AppRouter {
@@ -14,9 +15,7 @@ class AppRouter {
       GoRoute(
         path: '/',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Dashboard - To be implemented'),
-          ),
+          body: Center(child: Text('Dashboard - To be implemented')),
         ),
       ),
       
@@ -41,59 +40,47 @@ class AppRouter {
       GoRoute(
         path: '/fitness',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Fitness - To be implemented'),
-          ),
+          body: Center(child: Text('Fitness - To be implemented')),
         ),
       ),
-      
+
       // Nutrition routes - to be implemented
       GoRoute(
         path: '/nutrition',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Nutrition - To be implemented'),
-          ),
+          body: Center(child: Text('Nutrition - To be implemented')),
         ),
       ),
-      
+
       // Sleep routes - to be implemented
       GoRoute(
         path: '/sleep',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Sleep - To be implemented'),
-          ),
+          body: Center(child: Text('Sleep - To be implemented')),
         ),
       ),
-      
+
       // Mood routes - to be implemented
       GoRoute(
         path: '/mood',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Mood - To be implemented'),
-          ),
+          body: Center(child: Text('Mood - To be implemented')),
         ),
       ),
-      
+
       // Reports routes - to be implemented
       GoRoute(
         path: '/reports',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Reports - To be implemented'),
-          ),
+          body: Center(child: Text('Reports - To be implemented')),
         ),
       ),
-      
+
       // Profile routes - to be implemented
       GoRoute(
         path: '/profile',
         builder: (context, state) => const Scaffold(
-          body: Center(
-            child: Text('Profile - To be implemented'),
-          ),
+          body: Center(child: Text('Profile - To be implemented')),
         ),
       ),
       // Wellness (Geofence maps)
@@ -105,7 +92,13 @@ class AppRouter {
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Text('Page not found: ${state.uri}'),
+      // Font demo route - useful for verifying custom fonts
+      GoRoute(
+        path: '/font-demo',
+        builder: (context, state) => const FontDemoScreen(),
       ),
-    ),
+    ],
+    errorBuilder: (context, state) =>
+        Scaffold(body: Center(child: Text('Page not found: ${state.uri}'))),
   );
 }

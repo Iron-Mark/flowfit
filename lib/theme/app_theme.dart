@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 /// FlowFit App Theme
+///
+/// NOTE: This project uses a custom font family "GeneralSans" in the ThemeData.
+/// To use a custom font you must add the font files under `assets/fonts/GeneralSans/`
+/// and register them in `pubspec.yaml` (see `docs/ADD_CUSTOM_FONTS.md`).
 /// Based on FlowFit Style Guide:
 /// - Font: General Sans
 /// - Icons: Iconify/Solar
@@ -13,9 +17,11 @@ class AppTheme {
   static const Color cyan = Color(0xFF5DD9E2);
   static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
-  static const Color lightGray = Color(0xFFF5F5F5);
-  static const Color darkGray = Color(0xFF6B7280);
-  
+  static const Color lightGray = Color(0xFFF1F6FD);
+  static const Color darkGray = Color(0xFF62748E);
+  static const Color text = Color(0xFF314158);
+  static const Color background = lightGray;
+
   // Light Theme
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -32,89 +38,105 @@ class AppTheme {
       onSurface: black,
       onBackground: black,
     ),
+    // fontFamily uses the 'family' value you register in `pubspec.yaml` fonts.
+    // Example registration is shown in docs/ADD_CUSTOM_FONTS.md and pubspec.yaml
     fontFamily: 'GeneralSans',
+    fontFamilyFallback: const ['Roboto', 'Noto Sans'],
     textTheme: const TextTheme(
       displayLarge: TextStyle(
         fontSize: 57,
-        fontWeight: FontWeight.bold,
-        letterSpacing: -0.25,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -2.85,
+        color: text,
       ),
       displayMedium: TextStyle(
         fontSize: 45,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -2.25,
+        color: text,
       ),
       displaySmall: TextStyle(
         fontSize: 36,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -1.8,
+        color: text,
       ),
       headlineLarge: TextStyle(
         fontSize: 32,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -1.6,
+        color: text,
       ),
       headlineMedium: TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        letterSpacing: -1.4,
+        color: text,
       ),
       headlineSmall: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        letterSpacing: -1.2,
+        color: text,
       ),
       titleLarge: TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        letterSpacing: -1.1,
+        color: text,
       ),
       titleMedium: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.15,
+        letterSpacing: -0.8,
+        color: text,
       ),
       titleSmall: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
+        letterSpacing: -0.7,
+        color: text,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.normal,
-        letterSpacing: 0.5,
+        letterSpacing: -0.8,
+        color: text,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.normal,
-        letterSpacing: 0.25,
+        letterSpacing: -0.7,
+        color: text,
       ),
       bodySmall: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.normal,
-        letterSpacing: 0.4,
+        letterSpacing: -0.6,
+        color: text,
       ),
       labelLarge: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
+        letterSpacing: -0.7,
+        color: text,
       ),
       labelMedium: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        letterSpacing: -0.6,
+        color: text,
       ),
       labelSmall: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        letterSpacing: -0.55,
+        color: text,
       ),
     ),
     cardTheme: CardThemeData(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: white,
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -123,13 +145,11 @@ class AppTheme {
         foregroundColor: white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+          letterSpacing: -0.8,
         ),
       ),
     ),
@@ -138,13 +158,11 @@ class AppTheme {
         foregroundColor: primaryBlue,
         side: const BorderSide(color: primaryBlue, width: 2),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
+          letterSpacing: -0.8,
         ),
       ),
     ),
@@ -155,7 +173,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.1,
+          letterSpacing: -0.7,
         ),
       ),
     ),
@@ -186,15 +204,17 @@ class AppTheme {
       hintStyle: TextStyle(
         color: darkGray.withOpacity(0.6),
         fontSize: 14,
+        letterSpacing: -0.7,
       ),
       labelStyle: const TextStyle(
         color: darkGray,
         fontSize: 14,
         fontWeight: FontWeight.w500,
+        letterSpacing: -0.7,
       ),
     ),
   );
-  
+
   // Dark Theme
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
@@ -212,85 +232,102 @@ class AppTheme {
       onBackground: white,
     ),
     fontFamily: 'GeneralSans',
+    fontFamilyFallback: const ['Roboto', 'Noto Sans'],
     textTheme: const TextTheme(
       displayLarge: TextStyle(
         fontSize: 57,
-        fontWeight: FontWeight.bold,
-        letterSpacing: -0.25,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -2.85,
         color: white,
       ),
       displayMedium: TextStyle(
         fontSize: 45,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -2.25,
         color: white,
       ),
       displaySmall: TextStyle(
         fontSize: 36,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -1.8,
         color: white,
       ),
       headlineLarge: TextStyle(
         fontSize: 32,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -1.6,
         color: white,
       ),
       headlineMedium: TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        letterSpacing: -1.4,
         color: white,
       ),
       headlineSmall: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        letterSpacing: -1.2,
         color: white,
       ),
       titleLarge: TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        letterSpacing: -1.1,
         color: white,
       ),
       titleMedium: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.15,
+        letterSpacing: -0.8,
         color: white,
       ),
       titleSmall: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
+        letterSpacing: -0.7,
         color: white,
       ),
       bodyLarge: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.normal,
-        letterSpacing: 0.5,
+        letterSpacing: -0.8,
         color: white,
       ),
       bodyMedium: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.normal,
-        letterSpacing: 0.25,
+        letterSpacing: -0.7,
         color: white,
       ),
       bodySmall: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.normal,
-        letterSpacing: 0.4,
+        letterSpacing: -0.6,
+        color: white,
+      ),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.7,
+        color: white,
+      ),
+      labelMedium: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.6,
+        color: white,
+      ),
+      labelSmall: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.55,
         color: white,
       ),
     ),
     cardTheme: CardThemeData(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: const Color(0xFF1F1F1F),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -299,9 +336,7 @@ class AppTheme {
         foregroundColor: white,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

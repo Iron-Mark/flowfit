@@ -45,6 +45,10 @@ Files Changed (Non-feature)
   - Added `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")` to the `dependencies {}` block.
   - Why: `flutter_local_notifications` (or other plugin) required usage of newer Java APIs and the AAR metadata check failed; enabling desugaring addresses the AAR metadata issue.
 
+- native geofence plugin integration (non-feature change)
+  - Created `lib/features/wellness/platform/native_geofence_wrapper.dart` as a wrapper to `native_geofence` plugin for Android & iOS usage.
+  - Updated `lib/features/wellness/platform/geofence_native.dart` to prefer the plugin wrapper for registration/unregistration and capture plugin events as a fallback to the custom method channel bridge.
+
 Other Observations & Repository Impact
 -------------------------------------
 - `pubspec.yaml` contains global dependencies `sqflite` and `supabase_flutter`. These packages were restored globally after a previous temporary removal; the wellness feature remains independent of Supabase/SQL (it uses `InMemoryGeofenceRepository`).

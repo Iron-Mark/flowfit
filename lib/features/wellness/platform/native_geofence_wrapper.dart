@@ -19,19 +19,20 @@ class NativeGeofenceWrapper {
 
   static Future<bool> register(GeofenceMission mission, {String? callbackName}) async {
     try {
-      final zone = ng.Geofence(
-        id: mission.id,
-        location: Location(latitude: mission.center.latitude, longitude: mission.center.longitude),
-        radiusMeters: mission.radiusMeters,
-        triggers: {ng.GeofenceEvent.enter, ng.GeofenceEvent.exit},
-        iosSettings: ng.IosGeofenceSettings(initialTrigger: true),
-        androidSettings: ng.AndroidGeofenceSettings(
-          initialTriggers: {ng.GeofenceEvent.enter},
-          expiration: const Duration(days: 7),
-          loiteringDelay: const Duration(minutes: 5),
-          notificationResponsiveness: const Duration(minutes: 5),
-        ),
-      );
+      // Build a dynamic zone object to avoid relying on exact plugin types at compile-time.
+      final dynamic zone = {
+        'id': mission.id,
+        'location': {'latitude': mission.center.latitude, 'longitude': mission.center.longitude},
+        'radiusMeters': mission.radiusMeters,
+        'triggers': ['enter', 'exit'],
+        'iosSettings': {'initialTrigger': true},
+        'androidSettings': {
+          'initialTriggers': ['enter'],
+          'expiration': const Duration(days: 7).inMilliseconds,
+          'loiteringDelay': const Duration(minutes: 5).inMilliseconds,
+          'notificationResponsiveness': const Duration(minutes: 5).inMilliseconds,
+        }
+      };
       // Default to shared callback name if not specified (not used currently)
       // Pass the top-level callback function for background handling.
       await ng.NativeGeofenceManager.instance.createGeofence(zone, flowfitGeofenceCallback);
@@ -50,9 +51,9 @@ class NativeGeofenceWrapper {
     }
   }
 
-  static Future<List<ActiveGeofence>> getRegisteredGeofences() async {
+  static Future<List<dynamic>> getRegisteredGeofences() async {
     try {
-      return await ng.NativeGeofenceManager.instance.getRegisteredGeofences();
+      return List<dynamic>.from(await ng.NativeGeofenceManager.instance.getRegisteredGeofences());
     } catch (_) {
       return [];
     }

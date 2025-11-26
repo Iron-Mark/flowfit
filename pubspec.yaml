@@ -51,6 +51,9 @@ dependencies:
 flutter:
   assets:
     - assets/model/activity_tracker.tflite
+    - assets/images/
+    - assets/flowfit_logo.svg
+    - assets/flowfit_logo_header.svg
   uses-material-design: true # FIX: Enable material icons
   fonts:
     - family: GeneralSans

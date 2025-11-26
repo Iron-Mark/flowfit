@@ -16,19 +16,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, dynamic>> _pages = [
     {
       'title': 'Track Your Heart Rate',
-      'description': 'Monitor your heart rate in real-time with your Galaxy Watch and get detailed insights',
+      'description':
+          'Monitor your heart rate in real-time with your Galaxy Watch and get detailed insights',
       'icon': SolarIconsBold.heartPulse,
       'color': AppTheme.primaryBlue,
     },
     {
       'title': 'Personalized Workouts',
-      'description': 'Get workout plans tailored to your fitness level and goals',
+      'description':
+          'Get workout plans tailored to your fitness level and goals',
       'icon': SolarIconsBold.running,
       'color': AppTheme.cyan,
     },
     {
       'title': 'Track Your Progress',
-      'description': 'See your achievements and stay motivated with detailed analytics',
+      'description':
+          'See your achievements and stay motivated with detailed analytics',
       'icon': SolarIconsBold.chartSquare,
       'color': AppTheme.lightBlue,
     },
@@ -77,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-            
+
             // PageView
             Expanded(
               child: PageView.builder(
@@ -107,28 +110,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: page['color'],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 48),
-                        
+
                         // Title
                         Text(
                           page['title'],
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.text,
+                              ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Description
                         Text(
                           page['description'],
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey[600],
-                            height: 1.5,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: AppTheme.text.withOpacity(0.7),
+                                height: 1.5,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -137,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
               ),
             ),
-            
+
             // Page Indicator
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -148,17 +153,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: _currentPage == index ? 24 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _currentPage == index 
-                        ? AppTheme.primaryBlue 
+                    color: _currentPage == index
+                        ? AppTheme.primaryBlue
                         : Colors.grey[300],
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Next/Get Started Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -185,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),

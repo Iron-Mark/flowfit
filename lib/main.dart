@@ -32,6 +32,18 @@ import 'screens/onboarding/survey_daily_targets_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/font_demo_screen.dart';
+import 'screens/workout/workout_type_selection_screen.dart';
+import 'screens/workout/running/running_setup_screen.dart';
+import 'screens/workout/running/active_running_screen.dart';
+import 'screens/workout/running/running_summary_screen.dart';
+import 'screens/workout/walking/walking_options_screen.dart';
+import 'screens/workout/walking/mission_creation_screen.dart';
+import 'screens/workout/walking/active_walking_screen.dart';
+import 'screens/workout/walking/walking_summary_screen.dart';
+import 'models/mission.dart';
+import 'screens/workout/resistance/split_selection_screen.dart';
+import 'screens/workout/resistance/active_resistance_screen.dart';
+import 'screens/workout/resistance/resistance_summary_screen.dart';
 import 'widgets/debug_route_menu.dart';
 
 Future<void> main() async {
@@ -141,6 +153,18 @@ class FlowFitPhoneApp extends StatelessWidget {
           '/home': (context) => const PhoneHomePage(),
           '/phone_heart_rate': (context) => const PhoneHeartRateScreen(),
           '/font-demo': (context) => const FontDemoScreen(),
+          // Workout flow routes
+          '/workout/select-type': (context) => const WorkoutTypeSelectionScreen(),
+          '/workout/running/setup': (context) => const RunningSetupScreen(),
+          '/workout/running/active': (context) => const ActiveRunningScreen(),
+          '/workout/running/summary': (context) => const RunningSummaryScreen(),
+          '/workout/walking/options': (context) => const WalkingOptionsScreen(),
+          '/workout/walking/mission': (context) => const MissionCreationScreen(missionType: MissionType.target),
+          '/workout/walking/active': (context) => const ActiveWalkingScreen(),
+          '/workout/walking/summary': (context) => const WalkingSummaryScreen(),
+          '/workout/resistance/select-split': (context) => const SplitSelectionScreen(),
+          '/workout/resistance/active': (context) => const ActiveResistanceScreen(),
+          '/workout/resistance/summary': (context) => const ResistanceSummaryScreen(),
         },
       ),
     );

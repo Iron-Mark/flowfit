@@ -53,6 +53,12 @@ dependencies:
   flutter_local_notifications: ^19.5.0 # Local notifications for geofence alerts
   native_geofence: ^1.2.0
   flutter_map_location_marker: ^10.1.0
+  
+  # Unified Workout Flow dependencies
+  uuid: ^4.5.1 # For generating unique session IDs
+  http: ^1.2.2 # For OpenRouteService API calls
+  flutter_cache_manager: ^3.4.1 # For caching map tiles
+  share_plus: ^10.1.2 # For sharing workout achievements
 
 flutter:
   assets:

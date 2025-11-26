@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flowfit/features/wellness/presentation/maps_page_wrapper.dart';
 
 /// Application router configuration using go_router
 /// 
@@ -77,6 +78,11 @@ class AppRouter {
             child: Text('Profile - To be implemented'),
           ),
         ),
+      ),
+      // Wellness (Geofence maps)
+      GoRoute(
+        path: '/wellness',
+        builder: (context, state) => const MapsPageWrapper(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

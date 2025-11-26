@@ -3,6 +3,10 @@
     <uses-feature android:name="android.hardware.type.watch" />
     
     <!-- Permissions for Samsung Health Sensor API -->
+    <!-- Location permissions for geofencing -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <!-- Android 15+ health permission -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />

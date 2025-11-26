@@ -20,6 +20,7 @@ Position _p(double lat, double lon) => Position(
     );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('target mission accumulates distance and completes', () async {
     final controller = StreamController<Position>();
     final repo = InMemoryGeofenceRepository();
@@ -50,6 +51,8 @@ void main() {
     controller.add(_p(0.0, 0.002));
     await Future.delayed(const Duration(milliseconds: 10));
     controller.add(_p(0.0, 0.004));
+    await Future.delayed(const Duration(milliseconds: 10));
+    controller.add(_p(0.0, 0.006));
     await Future.delayed(const Duration(milliseconds: 10));
 
     // wait for events to process

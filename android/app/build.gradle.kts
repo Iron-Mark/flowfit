@@ -14,6 +14,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Enable core library desugaring to support libraries that require newer java APIs
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -66,4 +68,6 @@ dependencies {
     
     // Kotlin Serialization for JSON encoding/decoding
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    // Enable the desugaring support library for plugin compatibility (e.g., flutter_local_notifications)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

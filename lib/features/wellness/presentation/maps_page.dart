@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import '../domain/geofence_mission.dart';
 import '../data/geofence_repository.dart';
-import '../data/geofence_supabase_repository.dart';
 import '../services/geofence_service.dart';
 
 class WellnessMapsPage extends StatefulWidget {
@@ -118,20 +120,17 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Wellness Missions (Geofence Engine)'), actions: [
         IconButton(
-          icon: const Icon(Icons.sync),
-          tooltip: 'Sync with server',
+          icon: const Icon(Icons.download),
+          tooltip: 'Import',
           onPressed: () async {
-            final repoInst = context.read<GeofenceRepository>();
-            try {
-              if (repoInst is GeofenceSupabaseRepository) {
-                await repoInst.sync();
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Synced geofences with server')));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync not available for this repository')));
-              }
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to sync with server')));
-            }
+            await _importFromFile(repo);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.upload_file),
+          tooltip: 'Export',
+          onPressed: () async {
+            await _exportToFile(repo);
           },
         ),
       ]) ,
@@ -167,6 +166,31 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
         child: const Icon(Icons.my_location),
       ),
     );
+  }
+
+  Future<void> _exportToFile(GeofenceRepository repo) async {
+    final list = repo.current.map((m) => m.toJson()).toList();
+    final jsonStr = jsonEncode(list);
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/geofence_missions_export.json');
+    await file.writeAsString(jsonStr);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Exported to ${file.path}')));
+  }
+
+  Future<void> _importFromFile(GeofenceRepository repo) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/geofence_missions_export.json');
+    if (!await file.exists()) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No export file found')));
+      return;
+    }
+    final jsonStr = await file.readAsString();
+    final data = jsonDecode(jsonStr) as List<dynamic>;
+    for (final e in data) {
+      final mission = GeofenceMission.fromJson(Map<String, dynamic>.from(e as Map));
+      await repo.add(mission);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Imported missions')));
   }
 
   Widget _buildMissionList(GeofenceRepository repo, GeofenceService service) {

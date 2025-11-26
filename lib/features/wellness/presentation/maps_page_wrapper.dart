@@ -2,22 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/geofence_repository.dart';
 import '../domain/geofence_mission.dart';
-import '../data/geofence_sql_repository.dart';
 import '../services/geofence_service.dart';
 import 'maps_page.dart';
-import '../data/geofence_supabase_repository.dart';
 import '../services/notification_service.dart';
 
 class MapsPageWrapper extends StatelessWidget {
-  final bool useSqlRepository;
-    final bool useSupabase;
-    const MapsPageWrapper({super.key, this.useSqlRepository = false, this.useSupabase = true});
+  const MapsPageWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-      final GeofenceRepository repo = useSupabase
-          ? GeofenceSupabaseRepository()
-          : (useSqlRepository ? GeofenceSqlRepository() : InMemoryGeofenceRepository());
+      final GeofenceRepository repo = InMemoryGeofenceRepository();
     final service = GeofenceService(repository: repo);
     // Add a sample mission for demo purposes
     final sample = GeofenceMission(

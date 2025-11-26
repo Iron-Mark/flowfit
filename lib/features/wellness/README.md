@@ -9,9 +9,8 @@ This feature provides a unified geofence-based mission engine for wellness-focus
 Core components:
 
 - `GeofenceMission` (domain model) — mission metadata and runtime state
-- `GeofenceRepository` (data interface) — abstracts storage for missions
-  - `InMemoryGeofenceRepository` — in-memory, demo-only storage
-  - `GeofenceSqlRepository` — SQLite-backed persistent repository
+ - `GeofenceRepository` (data interface) — abstracts storage for missions
+ - `InMemoryGeofenceRepository` — in-memory, demo-only storage (default)
 - `GeofenceService` — listens to device location, handles events, tracks progress, and emits `GeofenceEvent`s (entered, exited, targetReached, outsideAlert)
 - `WellnessMapsPage` — Google Maps widget for creating, editing, and managing missions; shows markers and geofence circles
 
@@ -19,12 +18,12 @@ How to use
 
 1. Ensure `google_maps_flutter` is configured for your platform (API keys). See the project's README for details.
 2. Add the page via router: `GoRoute(path: '/wellness', builder: (ctx, state) => MapsPageWrapper())`
-3. For persistent storage, instantiate `MapsPageWrapper(useSqlRepository: true)`.
+3. For persistent storage, replace the in-memory repository with your own persisted implementation (local DB or cloud) when wiring `MapsPageWrapper` into the app.
 
 Notes & Next Steps
 
 - Background geofencing requires native implementations on Android/iOS.
-- Replace `InMemoryGeofenceRepository` in production with `GeofenceSqlRepository` or a Supabase implementation.
+ - Replace `InMemoryGeofenceRepository` in production with a persisted implementation backed by a local DB or your cloud backend (e.g., Supabase) if persistence is needed.
 - Add UI for editing existing Missions.
 - Add local notifications to alert the user for safety net events or mission completions.
 Wellness Mission Engine (Geofence)

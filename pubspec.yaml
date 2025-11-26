@@ -48,7 +48,7 @@ dependencies:
   shared_preferences: ^2.3.2 # SAFE UPGRADE: Bug fixes
   path_provider: ^2.1.4 # SAFE UPGRADE: Bug fixes
   flutter_map: ^8.2.2
-  flutter_local_notifications: ^13.0.0 # Local notifications for geofence alerts
+  flutter_local_notifications: ^19.5.0 # Local notifications for geofence alerts
 
 flutter:
   assets:

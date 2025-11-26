@@ -109,17 +109,17 @@ class HomeTab extends StatelessWidget {
                         children: [
                           Text(
                             '${_getGreeting()}, Jim! ☀️',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             "Let's make today a great day.",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                         ],
                       ),
@@ -180,9 +180,9 @@ class HomeTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Today's Summary Section
                 Text(
                   "📊 Today's Summary",
@@ -191,9 +191,9 @@ class HomeTab extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Stats Cards Row
                 Row(
                   children: [
@@ -228,9 +228,9 @@ class HomeTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Streak Card
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -258,10 +258,7 @@ class HomeTab extends StatelessWidget {
                           color: Colors.orange.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          '🔥',
-                          style: TextStyle(fontSize: 32),
-                        ),
+                        child: const Text('🔥', style: TextStyle(fontSize: 32)),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -270,17 +267,17 @@ class HomeTab extends StatelessWidget {
                           children: [
                             Text(
                               '5-Day Streak!',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               "You're on fire! Keep the momentum going. 🔥",
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[700],
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[700]),
                             ),
                           ],
                         ),
@@ -288,9 +285,9 @@ class HomeTab extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Quick Actions Section
                 Text(
                   '⚡ Quick Actions',
@@ -299,9 +296,9 @@ class HomeTab extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Quick Actions Grid (2x3)
                 GridView.count(
                   shrinkWrap: true,
@@ -333,12 +330,7 @@ class HomeTab extends StatelessWidget {
                         Colors.deepPurple,
                       ),
                     ),
-                    _buildQuickActionCard(
-                      context,
-                      'Water',
-                      '💧',
-                      Colors.cyan,
-                    ),
+                    _buildQuickActionCard(context, 'Water', '💧', Colors.cyan),
                     _buildQuickActionCard(
                       context,
                       'Meal Scanner',
@@ -351,17 +343,12 @@ class HomeTab extends StatelessWidget {
                       '😴',
                       Colors.purple,
                     ),
-                    _buildQuickActionCard(
-                      context,
-                      'Run',
-                      '🏃',
-                      Colors.blue,
-                    ),
+                    _buildQuickActionCard(context, 'Run', '🏃', Colors.blue),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Recent Activity Section
                 Text(
                   '📅 Recent Activity',
@@ -370,9 +357,9 @@ class HomeTab extends StatelessWidget {
                     color: Colors.black,
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 _buildRecentActivityItem(
                   context,
                   '🏃',
@@ -396,7 +383,7 @@ class HomeTab extends StatelessWidget {
                   '1.2L',
                   '2:15 PM',
                 ),
-                
+
                 const SizedBox(height: 20),
               ],
             ),
@@ -448,9 +435,9 @@ class HomeTab extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
@@ -485,10 +472,7 @@ class HomeTab extends StatelessWidget {
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              emoji,
-              style: const TextStyle(fontSize: 28),
-            ),
+            child: Text(emoji, style: const TextStyle(fontSize: 28)),
           ),
           const SizedBox(height: 8),
           Text(
@@ -526,10 +510,7 @@ class HomeTab extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 24),
-          ),
+          Text(emoji, style: const TextStyle(fontSize: 24)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -544,9 +525,9 @@ class HomeTab extends StatelessWidget {
                 ),
                 Text(
                   time,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -594,9 +575,9 @@ class MealsTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Coming soon',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -622,11 +603,7 @@ class TrackTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              SolarIconsBold.target,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(SolarIconsBold.target, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Track Your Goals',
@@ -635,9 +612,9 @@ class TrackTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Coming soon',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -663,11 +640,7 @@ class ActiveTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              SolarIconsBold.running,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(SolarIconsBold.running, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Workout Tracking',
@@ -676,9 +649,9 @@ class ActiveTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Coming soon',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -704,11 +677,7 @@ class AnalyticsTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              SolarIconsBold.chartSquare,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(SolarIconsBold.chartSquare, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'Your Analytics',
@@ -717,9 +686,9 @@ class AnalyticsTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Coming soon',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),

@@ -25,6 +25,7 @@ class GeofenceEvent {
 class GeofenceService extends ChangeNotifier {
   final GeofenceRepository repository;
   StreamSubscription<Position>? _positionSub;
+  StreamSubscription<dynamic>? _nativeSub;
   final Stream<Position>? _positionStreamOverride;
   final StreamController<GeofenceEvent> _eventController = StreamController.broadcast();
 
@@ -59,7 +60,7 @@ class GeofenceService extends ChangeNotifier {
     });
 
     // Listen to native geofence events if available
-    GeofenceNative.events.listen((dynamic event) {
+    _nativeSub ??= GeofenceNative.events.listen((dynamic event) {
       try {
         final map = Map<String, dynamic>.from(event);
         final id = map['missionId'] as String? ?? '';
@@ -71,6 +72,12 @@ class GeofenceService extends ChangeNotifier {
         }
       } catch (_) {}
     }, onError: (_) {});
+
+    // Register currently active missions with native bridge for background monitoring
+    final missions = await repository.getAll();
+    for (final m in missions.where((m) => m.isActive)) {
+      GeofenceNative.register(m);
+    }
   }
 
   Future<void> stopMonitoring() async {
@@ -160,6 +167,7 @@ class GeofenceService extends ChangeNotifier {
   @override
   void dispose() {
     _positionSub?.cancel();
+    _nativeSub?.cancel();
     _eventController.close();
     super.dispose();
   }

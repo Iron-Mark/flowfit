@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Provider;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/wellness_state_provider.dart';
 import 'secrets.dart';
 import 'theme/app_theme.dart';
 import 'utils/deep_link_handler.dart';
@@ -43,6 +45,23 @@ import 'screens/profile/settings/delete_account_screen.dart';
 import 'screens/profile/goals/weight_goals_screen.dart';
 import 'screens/profile/goals/fitness_goals_screen.dart';
 import 'screens/profile/goals/nutrition_goals_screen.dart';
+// import 'widgets/debug_route_menu.dart';
+import 'screens/workout/workout_type_selection_screen.dart';
+import 'screens/workout/running/running_setup_screen.dart';
+import 'screens/workout/running/active_running_screen.dart';
+import 'screens/workout/running/running_summary_screen.dart';
+import 'screens/workout/running/share_achievement_screen.dart';
+import 'screens/workout/walking/walking_options_screen.dart';
+import 'screens/workout/walking/mission_creation_screen.dart';
+import 'screens/workout/walking/active_walking_screen.dart';
+import 'screens/workout/walking/walking_summary_screen.dart';
+import 'models/mission.dart';
+import 'screens/workout/resistance/split_selection_screen.dart';
+import 'screens/workout/resistance/active_resistance_screen.dart';
+import 'screens/workout/resistance/resistance_summary_screen.dart';
+import 'screens/wellness/wellness_tracker_page.dart';
+import 'screens/wellness/wellness_onboarding_screen.dart';
+import 'screens/wellness/wellness_settings_screen.dart';
 import 'widgets/debug_route_menu.dart';
 
 Future<void> main() async {
@@ -60,8 +79,18 @@ Future<void> main() async {
 
   // Initialize deep link handler
   DeepLinkHandler().initialize();
-
-  runApp(const ProviderScope(child: FlowFitPhoneApp()));
+  
+  // Initialize SharedPreferences for wellness state persistence
+  final sharedPreferences = await SharedPreferences.getInstance();
+  
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const FlowFitPhoneApp(),
+    ),
+  );
 }
 
 class FlowFitPhoneApp extends StatelessWidget {
@@ -114,12 +143,14 @@ class FlowFitPhoneApp extends StatelessWidget {
       // without editing code. Example:
       // flutter run -d <device-id> -t lib/main.dart --dart-define=INITIAL_ROUTE=/font-demo
       child: MaterialApp(
+        // Add navigator key for deep link handling
+        navigatorKey: DeepLinkHandler.navigatorKey,
         // Wrap the app's child with a debug overlay (Floating debug menu)
         builder: (context, child) => Stack(
           children: [
             if (child != null) child,
             // Show the debug route menu only in debug builds.
-            const DebugRouteMenu(),
+            // const DebugRouteMenu(),
           ],
         ),
         title: 'FlowFit',
@@ -167,6 +198,26 @@ class FlowFitPhoneApp extends StatelessWidget {
           '/fitness-goals': (context) => const FitnessGoalsScreen(),
           '/nutrition-goals': (context) => const NutritionGoalsScreen(),
           '/about-us': (context) => const AboutUsScreen(),
+          // Workout flow routes
+          '/workout/select-type': (context) => const WorkoutTypeSelectionScreen(),
+          '/workout/running/setup': (context) => const RunningSetupScreen(),
+          '/workout/running/active': (context) => const ActiveRunningScreen(),
+          '/workout/running/summary': (context) => const RunningSummaryScreen(),
+          '/workout/running/share': (context) {
+            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            final session = args?['session'];
+            return ShareAchievementScreen(session: session);
+          },
+          '/workout/walking/options': (context) => const WalkingOptionsScreen(),
+          '/workout/walking/mission': (context) => const MissionCreationScreen(missionType: MissionType.target),
+          '/workout/walking/active': (context) => const ActiveWalkingScreen(),
+          '/workout/walking/summary': (context) => const WalkingSummaryScreen(),
+          '/workout/resistance/select-split': (context) => const SplitSelectionScreen(),
+          '/workout/resistance/active': (context) => const ActiveResistanceScreen(),
+          '/workout/resistance/summary': (context) => const ResistanceSummaryScreen(),
+          '/wellness-tracker': (context) => const WellnessTrackerPage(),
+          '/wellness-onboarding': (context) => const WellnessOnboardingScreen(),
+          '/wellness-settings': (context) => const WellnessSettingsScreen(),
         },
       ),
     );

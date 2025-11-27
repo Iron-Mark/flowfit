@@ -18,7 +18,7 @@ class AppRouter {
           body: Center(child: Text('Dashboard - To be implemented')),
         ),
       ),
-      
+
       // Active/Workout tracking route
       GoRoute(
         path: '/active',
@@ -35,7 +35,7 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Fitness routes - to be implemented
       GoRoute(
         path: '/fitness',
@@ -88,11 +88,6 @@ class AppRouter {
         path: '/wellness',
         builder: (context, state) => const MapsPageWrapper(),
       ),
-    ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text('Page not found: ${state.uri}'),
-      // Font demo route - useful for verifying custom fonts
       GoRoute(
         path: '/font-demo',
         builder: (context, state) => const FontDemoScreen(),
@@ -100,5 +95,6 @@ class AppRouter {
     ],
     errorBuilder: (context, state) =>
         Scaffold(body: Center(child: Text('Page not found: ${state.uri}'))),
+    // Font demo route - useful for verifying custom fonts
   );
 }

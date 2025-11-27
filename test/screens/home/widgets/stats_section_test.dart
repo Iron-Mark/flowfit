@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowfit/screens/home/widgets/stats_section.dart';
 import 'package:flowfit/providers/dashboard_providers.dart';
+import 'package:flowfit/core/providers/providers.dart' as core_providers;
+import 'package:flowfit/domain/entities/heart_rate_data.dart';
 import 'package:flowfit/models/daily_stats.dart';
 
 void main() {
@@ -19,6 +21,7 @@ void main() {
         ProviderScope(
           overrides: [
             dailyStatsProvider.overrideWith((ref) async => testStats),
+            core_providers.currentHeartRateProvider.overrideWith((ref) => Stream.value(HeartRateData(bpm: 68, ibiValues: [], timestamp: DateTime.now(), status: HeartRateStatus.active)),),
           ],
           child: MaterialApp(
             home: Scaffold(
@@ -45,6 +48,7 @@ void main() {
         ProviderScope(
           overrides: [
             dailyStatsProvider.overrideWith((ref) async => testStats),
+            core_providers.currentHeartRateProvider.overrideWith((ref) => Stream.value(HeartRateData(bpm: 68, ibiValues: [], timestamp: DateTime.now(), status: HeartRateStatus.active)),),
           ],
           child: MaterialApp(
             home: Scaffold(
@@ -59,8 +63,9 @@ void main() {
       // Check for StepsCard
       expect(find.byType(StepsCard), findsOneWidget);
       
-      // Check for CompactStatsCards
-      expect(find.byType(CompactStatsCard), findsNWidgets(2));
+      // Check for MoodCard and CardioComparisonCard
+      expect(find.byType(MoodCard), findsOneWidget);
+      expect(find.byType(CardioComparisonCard), findsOneWidget);
       
       // Check for stats values
       expect(find.text('6504 / 10000'), findsOneWidget);
@@ -75,6 +80,7 @@ void main() {
             dailyStatsProvider.overrideWith((ref) async {
               throw Exception('Failed to load');
             }),
+            core_providers.currentHeartRateProvider.overrideWith((ref) => Stream.value(HeartRateData(bpm: 68, ibiValues: [], timestamp: DateTime.now(), status: HeartRateStatus.active)),),
           ],
           child: MaterialApp(
             home: Scaffold(
@@ -103,6 +109,7 @@ void main() {
         ProviderScope(
           overrides: [
             dailyStatsProvider.overrideWith((ref) async => testStats),
+            core_providers.currentHeartRateProvider.overrideWith((ref) => Stream.value(HeartRateData(bpm: 68, ibiValues: [], timestamp: DateTime.now(), status: HeartRateStatus.active)),),
           ],
           child: MaterialApp(
             theme: ThemeData(
@@ -357,9 +364,10 @@ void main() {
       // Verify StepsCard is full width (appears before Row)
       expect(find.byType(StepsCard), findsOneWidget);
       
-      // Verify CompactStatsCards are in a Row
+      // Verify Mood and Cardio cards are in a Row
       expect(find.byType(Row), findsWidgets);
-      expect(find.byType(CompactStatsCard), findsNWidgets(2));
+      expect(find.byType(MoodCard), findsOneWidget);
+      expect(find.byType(CardioComparisonCard), findsOneWidget);
     });
 
     testWidgets('has proper spacing between cards', (WidgetTester tester) async {

@@ -23,7 +23,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   void _checkAuthState() {
     final authState = ref.read(authNotifierProvider);
-    
+
     // If already authenticated, redirect to dashboard
     if (authState.user != null && mounted) {
       Navigator.of(context).pushReplacementNamed('/dashboard');
@@ -122,8 +122,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    // Navigator.pushNamed(context, '/login');
-                    Navigator.pushNamed(context, '/trackertest');
+                    Navigator.pushNamed(context, '/login');
                   },
                   child: Text(
                     'Log In',

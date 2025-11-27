@@ -10,7 +10,7 @@ import 'package:flowfit/features/wellness/services/notification_service.dart';
 
 void main() {
   testWidgets('MapsPageWrapper listens to notification taps and requests focus', (WidgetTester tester) async {
-    await tester.pumpWidget(const MaterialApp(home: MapsPageWrapper()));
+    await tester.pumpWidget(const MaterialApp(home: MapsPageWrapper(autoStartMoodTracker: false)));
 
     // Get repository and service from the MultiProvider of the MapsPageWrapper
     final mapsFinder = find.byType(WellnessMapsPage);

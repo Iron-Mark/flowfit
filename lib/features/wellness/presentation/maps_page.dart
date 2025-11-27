@@ -371,7 +371,10 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
               lastCenter: _lastCenter,
               onAddAtLatLng: (lat) async => await _addGeofenceAtLatLng(lat),
               onOpenMission: (m) => _showMissionActions(m),
-              onFocusMission: (m) async => await _startFocusMission(m),
+              // Make Focus & Navigate the primary action: request a UI focus via the
+              // GeofenceService stream so it behaves the same as MoodTrackerService
+              // invoked focus requests (and works even when triggered from notifications).
+              onFocusMission: (m) => service.requestFocus(m.id),
             ),
           
           // Focus overlay when a mission is selected for navigation (positioned above bottom sheet)

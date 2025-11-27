@@ -75,19 +75,17 @@ class MissionBottomSheet extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    iconSize: 20,
-                    icon: const Icon(Icons.flag),
-                    tooltip: 'Focus & Navigate',
-                    onPressed: () async {
-                      // Focus is the primary action — start navigation UI for this mission
+                  // Make focus a primary action with a big, clear affordance
+                  ElevatedButton.icon(
+                    onPressed: () {
                       onFocusMission(m);
                     },
+                    icon: const Icon(Icons.flag),
+                    label: const Text('Focus'),
                   ),
+                  const SizedBox(width: 8.0),
                   Transform.scale(
-                    scale: 0.8,
+                    scale: 0.72,
                     child: Switch(
                       value: m.isActive,
                       onChanged: (v) => v ? service.activateMission(m.id) : service.deactivateMission(m.id),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 import '../../../models/recent_activity.dart';
 import '../../../providers/dashboard_providers.dart';
+import '../../../widgets/mood_change_badge.dart';
 
 /// RecentActivitySection widget displays recent workout history
 /// 
@@ -334,12 +335,24 @@ class ActivityCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      activity.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            activity.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        // Mood badge in top right
+                        if (activity.hasMoodData)
+                          MoodChangeBadge(
+                            preMood: activity.preMood,
+                            postMood: activity.postMood,
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -348,9 +361,21 @@ class ActivityCard extends StatelessWidget {
                         color: theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
+                    // Mood boost text
+                    if (activity.hadMoodImprovement) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        activity.moodBoostText,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: const Color(0xFF10B981), // Green
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               
               // Date label
               Text(

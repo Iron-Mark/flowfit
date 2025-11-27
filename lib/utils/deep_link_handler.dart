@@ -7,6 +7,9 @@ class DeepLinkHandler {
   factory DeepLinkHandler() => _instance;
   DeepLinkHandler._internal();
 
+  // Global navigator key to handle navigation from anywhere
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   /// Initialize deep link handling
   /// Call this in main() after Supabase initialization
   void initialize() {
@@ -19,6 +22,25 @@ class DeepLinkHandler {
       
       if (event == AuthChangeEvent.signedIn && session != null) {
         debugPrint('User signed in via deep link: ${session.user.email}');
+        
+        // Check if email is verified
+        final user = session.user;
+        if (user.emailConfirmedAt != null) {
+          debugPrint('Email verified! Redirecting to survey flow...');
+          
+          // Navigate to survey intro screen after email verification
+          Future.delayed(const Duration(milliseconds: 500), () {
+            final context = navigatorKey.currentContext;
+            if (context != null) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/survey_intro',
+                (route) => false,
+                arguments: {'userId': user.id, 'email': user.email},
+              );
+            }
+          });
+        }
       } else if (event == AuthChangeEvent.tokenRefreshed) {
         debugPrint('Token refreshed');
       }

@@ -48,7 +48,9 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
         // Check if email is verified
         if (user.emailConfirmedAt != null) {
           debugPrint('Email verified via deep link!');
-          _onVerificationSuccess();
+          // Deep link handler will handle navigation, so we just cancel timers
+          _autoCheckTimer?.cancel();
+          _countdownTimer?.cancel();
         }
       }
     });
@@ -392,24 +394,6 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                   color: Colors.grey[600],
                 ),
                 textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Skip for now (development only)
-              TextButton(
-                onPressed: () {
-                  // For development/testing - skip verification
-                  _onVerificationSuccess();
-                },
-                child: Text(
-                  'Skip for now (Testing)',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
               ),
 
               const SizedBox(height: 16),

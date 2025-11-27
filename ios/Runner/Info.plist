@@ -49,5 +49,20 @@
 	<string>We use your location for wellness geofences and missions.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>We track your location in the background for safety and mission progress.</string>
+	<!-- Deep Link Configuration for Supabase Auth -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.example.flowfit</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.example.flowfit</string>
+				<string>com.example.flowfit.dev</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

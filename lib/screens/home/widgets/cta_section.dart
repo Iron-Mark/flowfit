@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/workout_flow_provider.dart';
+import '../../../widgets/quick_mood_check_bottom_sheet.dart';
 
-/// CTASection widget displays call-to-action buttons for starting workouts
+/// CTASection widget displays unified workout entry point
 /// 
 /// Shows:
 /// - Section header "Ready to move?"
-/// - Primary button "Start a Workout"
-/// - Secondary outlined button "Log a Run"
-/// - Secondary outlined button "Record a Walk"
+/// - Single primary button "START WORKOUT"
 /// 
 /// Navigation:
-/// - Start a Workout -> /active (workout selection screen)
-/// - Log a Run -> /active?type=run (activity tracking with run pre-selected)
-/// - Record a Walk -> /active?type=walk (activity tracking with walk pre-selected)
+/// - START WORKOUT -> Opens mood check bottom sheet
 /// 
-/// Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 9.2
-class CTASection extends StatelessWidget {
+/// Requirements: 1.1, 1.2, 1.5
+class CTASection extends ConsumerWidget {
   const CTASection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Column(
@@ -37,125 +35,108 @@ class CTASection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         
-        // CTA buttons
+        // Single unified START WORKOUT button
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              // Primary button: Start a Workout
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.go('/active');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+          child: SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: () {
+                // Start workout flow with mood check
+                ref.read(workoutFlowProvider.notifier).startWorkoutFlow();
+                
+                // Show mood check bottom sheet
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (bottomSheetContext) => QuickMoodCheckBottomSheet(
+                    onMoodSelected: () {
+                      // Navigate to workout type selection after mood is selected
+                      // Use the original context which has Navigator
+                      Navigator.of(context).pushNamed('/workout/select-type');
+                    },
                   ),
-                  child: Text(
-                    'Start a Workout',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6), // Primary blue
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              const SizedBox(height: 12),
-              
-              // Secondary button: Log a Run
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: OutlinedButton(
-                  onPressed: () {
-                    context.go('/active?type=run');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.primary,
-                    side: BorderSide(
-                      color: theme.colorScheme.outline,
-                      width: 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    'Log a Run',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              child: Text(
+                'START WORKOUT',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 12),
-              
-              // Secondary button: Record a Walk
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: OutlinedButton(
-                  onPressed: () {
-                    context.go('/active?type=walk');
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.primary,
-                    side: BorderSide(
-                      color: theme.colorScheme.outline,
-                      width: 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    'Record a Walk',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        
+        // Wellness Tracker button
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/wellness-tracker');
+              },
+              icon: const Icon(Icons.favorite, size: 20),
+              label: Text(
+                'Wellness Tracker',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 12),
-              
-              // Map Mission button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/mission');
-                  },
-                  icon: const Icon(Icons.map_outlined),
-                  label: Text(
-                    'Map Missions',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.primary,
-                    side: BorderSide(
-                      color: theme.colorScheme.outline,
-                      width: 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFEF4444), // Red for heart
+                side: const BorderSide(color: Color(0xFFEF4444), width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        
+        // Test button for OLD Map Mission screen (temporary for testing)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton(
+              onPressed: () {
+                // Navigate to the OLD map mission screen (wellness feature)
+                Navigator.of(context).pushNamed('/mission');
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF10B981), // Green
+                side: const BorderSide(color: Color(0xFF10B981), width: 2),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'OLD MAP MISSIONS (Test)',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: const Color(0xFF10B981),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
           ),
         ),
       ],

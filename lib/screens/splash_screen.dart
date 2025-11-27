@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../theme/app_theme.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../presentation/providers/providers.dart';
-import '../presentation/providers/profile_providers.dart' as profile_providers;
 import '../domain/entities/auth_state.dart';
 
 /// Splash screen shown while checking authentication state.
@@ -15,19 +14,55 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
   @override
   void initState() {
     super.initState();
+
+    // Setup animations
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
+      ),
+    );
+
+    // Start animation
+    _animationController.forward();
+
     _checkAuthState();
   }
 
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   Future<void> _checkAuthState() async {
-    // Wait a moment for UI to render
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Wait for animation and minimum splash time
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
+    // final authState = ref.read(authNotifierProvider);
     final authNotifier = ref.read(authNotifierProvider.notifier);
 
     // Initialize auth state (check for existing session)
@@ -40,47 +75,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (updatedAuthState.status == AuthStatus.authenticated &&
         updatedAuthState.user != null) {
       // User is authenticated, check if profile is complete
-      final userId = updatedAuthState.user!.id;
-      debugPrint('🔍 SplashScreen: User authenticated with ID: $userId');
+      final profileRepository = ref.read(profileRepositoryProvider);
 
       try {
-        final profileRepository = await ref.read(
-          profile_providers.profileRepositoryProvider.future,
-        );
         final hasCompletedSurvey = await profileRepository.hasCompletedSurvey(
-          userId,
+          updatedAuthState.user!.id,
         );
-
-        debugPrint('🔍 SplashScreen: hasCompletedSurvey = $hasCompletedSurvey');
 
         if (!mounted) return;
 
         if (hasCompletedSurvey) {
           // Profile complete, go to dashboard
-          debugPrint(
-            '✅ SplashScreen: Profile complete, navigating to dashboard',
-          );
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
           // Profile incomplete, go to survey
-          debugPrint(
-            '⚠️ SplashScreen: Profile incomplete, navigating to survey',
-          );
           Navigator.pushReplacementNamed(
             context,
             '/survey_intro',
-            arguments: {'userId': userId},
+            arguments: {'userId': updatedAuthState.user!.id},
           );
         }
-      } catch (e, stackTrace) {
+      } catch (e) {
         // Error checking profile, assume incomplete and go to survey
-        debugPrint('❌ SplashScreen: Error checking profile: $e');
-        debugPrint('Stack trace: $stackTrace');
         if (mounted) {
           Navigator.pushReplacementNamed(
             context,
             '/survey_intro',
-            arguments: {'userId': userId},
+            arguments: {'userId': updatedAuthState.user!.id},
           );
         }
       }
@@ -95,41 +116,53 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // FlowFit Logo
-            Image.asset(
-              'assets/flowfit_logo.svg',
-              width: 200,
-              height: 200,
-              errorBuilder: (context, error, stackTrace) {
-                // Fallback to icon if SVG fails to load
-                return Container(
+      backgroundColor: const Color(0xFFF2F7FF), // Light blue background
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
+
+              // Animated Logo
+              AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: SvgPicture.asset(
+                  'assets/flowfit_logo.svg',
                   width: 120,
                   height: 120,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.fitness_center,
-                    size: 60,
-                    color: AppTheme.primaryBlue,
-                  ),
-                );
-              },
-            ),
+                ),
+              ),
 
-            const SizedBox(height: 48),
+              const Spacer(),
 
-            // Loading indicator
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
-            ),
-          ],
+              // App Name at the bottom
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 48.0),
+                  child: Text(
+                    'FlowFit',
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      color: const Color(0xFF3183E8), // Brand Blue
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'GeneralSans',
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

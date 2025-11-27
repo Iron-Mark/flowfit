@@ -25,6 +25,7 @@ class GeofenceEvent {
 
 class GeofenceService extends ChangeNotifier {
   final GeofenceRepository repository;
+  final StreamController<String> _focusRequestController = StreamController.broadcast();
   StreamSubscription<Position>? _positionSub;
   StreamSubscription<dynamic>? _nativeSub;
   final Stream<Position>? _positionStreamOverride;
@@ -37,6 +38,8 @@ class GeofenceService extends ChangeNotifier {
   GeofenceService({required this.repository, Stream<Position>? positionStreamOverride}) : _positionStreamOverride = positionStreamOverride;
 
   Stream<GeofenceEvent> get events => _eventController.stream;
+
+  Stream<String> get focusRequests => _focusRequestController.stream;
 
   double getProgress(String missionId) => _cumulativeDistanceForMission[missionId] ?? 0.0;
 
@@ -134,6 +137,11 @@ class GeofenceService extends ChangeNotifier {
     GeofenceNative.unregister(id);
   }
 
+  /// Called to request the UI to open focus for a mission (by id).
+  void requestFocus(String missionId) {
+    _focusRequestController.add(missionId);
+  }
+
   Future<void> _handlePosition(Position pos) async {
     final missions = (await repository.getAll()).where((m) => m.isActive).toList();
     for (final m in missions) {
@@ -193,6 +201,7 @@ class GeofenceService extends ChangeNotifier {
     _positionSub?.cancel();
     _nativeSub?.cancel();
     _eventController.close();
+    _focusRequestController.close();
     super.dispose();
   }
 }

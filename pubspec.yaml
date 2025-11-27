@@ -50,12 +50,18 @@ dependencies:
   path_provider: ^2.1.4 # SAFE UPGRADE: Bug fixes
 
   # Image Picker
-  image_picker: ^1.0.7 # For profile photo selection
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   flutter_local_notifications: ^19.5.0 # Local notifications for geofence alerts
   native_geofence: ^1.2.0
   flutter_map_location_marker: ^10.1.0
+
+  # Unified Workout Flow dependencies
+  uuid: ^4.5.1 # For generating unique session IDs
+  http: ^1.2.2 # For OpenRouteService API calls
+  flutter_cache_manager: ^3.4.1 # For caching map tiles
+  share_plus: ^10.1.2 # For sharing workout achievements
+  image_picker: ^1.1.2 # For selecting background images for share cards
 
 flutter:
   assets:
@@ -118,7 +124,7 @@ dev_dependencies:
 
   # Testing
   mockito: ^5.4.4
-  
+
   # Linting
   flutter_lints: ^3.0.2 # SAFE UPGRADE: New lint rules
 

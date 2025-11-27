@@ -15,13 +15,14 @@ class MapTutorialOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Container(
-      color: Colors.black.withOpacity(0.85),
+      color: Colors.black.withAlpha((0.85 * 255).toInt()),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               // Title
               Text(
                 '🗺️ Welcome to Map Missions!',
@@ -99,6 +100,7 @@ class MapTutorialOverlay extends StatelessWidget {
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),

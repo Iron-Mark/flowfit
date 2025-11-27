@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_theme.dart';
 import '../presentation/providers/providers.dart';
+import '../presentation/providers/profile_providers.dart' as profile_providers;
 import '../domain/entities/auth_state.dart';
 
 /// Splash screen shown while checking authentication state.
-/// 
+///
 /// Requirements: 5.1 - Check auth state on app start
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -27,7 +28,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     if (!mounted) return;
 
-    final authState = ref.read(authNotifierProvider);
     final authNotifier = ref.read(authNotifierProvider.notifier);
 
     // Initialize auth state (check for existing session)
@@ -37,35 +37,50 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final updatedAuthState = ref.read(authNotifierProvider);
 
-    if (updatedAuthState.status == AuthStatus.authenticated && updatedAuthState.user != null) {
+    if (updatedAuthState.status == AuthStatus.authenticated &&
+        updatedAuthState.user != null) {
       // User is authenticated, check if profile is complete
-      final profileRepository = ref.read(profileRepositoryProvider);
-      
+      final userId = updatedAuthState.user!.id;
+      debugPrint('🔍 SplashScreen: User authenticated with ID: $userId');
+
       try {
-        final hasCompletedSurvey = await profileRepository.hasCompletedSurvey(
-          updatedAuthState.user!.id,
+        final profileRepository = await ref.read(
+          profile_providers.profileRepositoryProvider.future,
         );
+        final hasCompletedSurvey = await profileRepository.hasCompletedSurvey(
+          userId,
+        );
+
+        debugPrint('🔍 SplashScreen: hasCompletedSurvey = $hasCompletedSurvey');
 
         if (!mounted) return;
 
         if (hasCompletedSurvey) {
           // Profile complete, go to dashboard
+          debugPrint(
+            '✅ SplashScreen: Profile complete, navigating to dashboard',
+          );
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
           // Profile incomplete, go to survey
+          debugPrint(
+            '⚠️ SplashScreen: Profile incomplete, navigating to survey',
+          );
           Navigator.pushReplacementNamed(
             context,
             '/survey_intro',
-            arguments: {'userId': updatedAuthState.user!.id},
+            arguments: {'userId': userId},
           );
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
         // Error checking profile, assume incomplete and go to survey
+        debugPrint('❌ SplashScreen: Error checking profile: $e');
+        debugPrint('Stack trace: $stackTrace');
         if (mounted) {
           Navigator.pushReplacementNamed(
             context,
             '/survey_intro',
-            arguments: {'userId': updatedAuthState.user!.id},
+            arguments: {'userId': userId},
           );
         }
       }
@@ -85,35 +100,31 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // App logo or icon
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.fitness_center,
-                size: 60,
-                color: AppTheme.primaryBlue,
-              ),
+            // FlowFit Logo
+            Image.asset(
+              'assets/flowfit_logo.svg',
+              width: 200,
+              height: 200,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to icon if SVG fails to load
+                return Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.fitness_center,
+                    size: 60,
+                    color: AppTheme.primaryBlue,
+                  ),
+                );
+              },
             ),
-            
-            const SizedBox(height: 32),
-            
-            // App name
-            const Text(
-              'FlowFit',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryBlue,
-              ),
-            ),
-            
+
             const SizedBox(height: 48),
-            
+
             // Loading indicator
             const CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),

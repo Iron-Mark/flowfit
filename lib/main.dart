@@ -32,6 +32,20 @@ import 'screens/onboarding/survey_daily_targets_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/font_demo_screen.dart';
+import 'screens/profile/settings/general/privacy_policy_screen.dart';
+import 'screens/profile/settings/settings_screen.dart';
+import 'screens/profile/settings/general/notification_settings_screen.dart';
+import 'screens/profile/settings/general/app_integration_screen.dart';
+import 'screens/profile/settings/general/language_settings_screen.dart';
+import 'screens/profile/settings/general/unit_settings_screen.dart';
+import 'screens/profile/settings/general/terms_of_service_screen.dart';
+import 'screens/profile/settings/general/help_support_screen.dart';
+import 'screens/profile/settings/general/about_us_screen.dart';
+import 'screens/profile/settings/change_password_screen.dart';
+import 'screens/profile/settings/delete_account_screen.dart';
+import 'screens/profile/goals/weight_goals_screen.dart';
+import 'screens/profile/goals/fitness_goals_screen.dart';
+import 'screens/profile/goals/nutrition_goals_screen.dart';
 import 'widgets/debug_route_menu.dart';
 
 Future<void> main() async {
@@ -131,9 +145,12 @@ class FlowFitPhoneApp extends StatelessWidget {
           // New optimized survey flow
           '/survey_intro': (context) => const SurveyIntroScreen(),
           '/survey_basic_info': (context) => const SurveyBasicInfoScreen(),
-          '/survey_body_measurements': (context) => const SurveyBodyMeasurementsScreen(),
-          '/survey_activity_goals': (context) => const SurveyActivityGoalsScreen(),
-          '/survey_daily_targets': (context) => const SurveyDailyTargetsScreen(),
+          '/survey_body_measurements': (context) =>
+              const SurveyBodyMeasurementsScreen(),
+          '/survey_activity_goals': (context) =>
+              const SurveyActivityGoalsScreen(),
+          '/survey_daily_targets': (context) =>
+              const SurveyDailyTargetsScreen(),
           '/onboarding1': (context) => const OnboardingScreen(),
           '/dashboard': (context) => const DashboardScreen(),
           '/trackertest': (context) => const TrackerPage(),
@@ -141,6 +158,21 @@ class FlowFitPhoneApp extends StatelessWidget {
           '/home': (context) => const PhoneHomePage(),
           '/phone_heart_rate': (context) => const PhoneHeartRateScreen(),
           '/font-demo': (context) => const FontDemoScreen(),
+          '/privacy-policy': (context) => const PrivacyPolicyScreen(),
+          '/settings': (context) => const SettingsScreen(),
+          '/notification-settings': (context) =>
+              const NotificationSettingsScreen(),
+          '/app-integration': (context) => const AppIntegrationScreen(),
+          '/language-settings': (context) => const LanguageSettingsScreen(),
+          '/unit-settings': (context) => const UnitSettingsScreen(),
+          '/terms-of-service': (context) => const TermsOfServiceScreen(),
+          '/help-support': (context) => const HelpSupportScreen(),
+          '/change-password': (context) => const ChangePasswordScreen(),
+          '/delete-account': (context) => const DeleteAccountScreen(),
+          '/weight-goals': (context) => const WeightGoalsScreen(),
+          '/fitness-goals': (context) => const FitnessGoalsScreen(),
+          '/nutrition-goals': (context) => const NutritionGoalsScreen(),
+          '/about-us': (context) => const AboutUsScreen(),
         },
       ),
     );

@@ -48,6 +48,9 @@ dependencies:
   sqflite: ^2.3.3 # SAFE UPGRADE: Bug fixes
   shared_preferences: ^2.3.2 # SAFE UPGRADE: Bug fixes
   path_provider: ^2.1.4 # SAFE UPGRADE: Bug fixes
+
+  # Image Picker
+  image_picker: ^1.0.7 # For profile photo selection
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   flutter_local_notifications: ^19.5.0 # Local notifications for geofence alerts

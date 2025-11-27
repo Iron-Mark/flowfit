@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 import '../providers/dashboard_providers.dart';
 import '../presentation/providers/providers.dart';
@@ -52,6 +54,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     final authState = ref.watch(authNotifierProvider);
     
     // Listen for auth state changes
@@ -68,7 +72,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: Container(
-        height: 72,
+        padding: EdgeInsets.only(bottom: bottomPadding),
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           boxShadow: [
@@ -141,7 +145,7 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: Column(
@@ -157,159 +161,161 @@ class HomeTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                
-                const SizedBox(height: 24),
-                
-                // Stats Cards Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        'Steps',
-                        '6504',
-                        Icons.directions_walk,
-                        theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        'Calories',
-                        '6504',
-                        Icons.local_fire_department,
-                        Colors.orange,
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Minutes Card
-                _buildStatCard(
-                  context,
-                  'Minutes',
-                  '45',
-                  Icons.timer,
-                  theme.colorScheme.tertiary,
-                ),
-                
-                const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
-                // Streak Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                    // Stats Cards Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            context,
+                            'Steps',
+                            '6504',
+                            Icons.directions_walk,
+                            theme.colorScheme.primary,
+                          ),
                         ),
-                        child: const Text('🔥', style: TextStyle(fontSize: 32)),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '5-Day Streak',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "You're on fire!\nKeep the momentum going.",
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildStatCard(
+                            context,
+                            'Calories',
+                            '6504',
+                            Icons.local_fire_department,
+                            Colors.orange,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
+                      ],
+                    ),
 
-                const SizedBox(height: 24),
-                
-                // Quick Track Section
-                Text(
-                  'Quick Track',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                    const SizedBox(height: 12),
 
-                const SizedBox(height: 16),
-                
-                // Quick Track Grid (2x2)
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.2,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/phone_heart_rate');
-                      },
-                      child: _buildQuickTrackCard(
-                        context,
-                        'Heart Rate',
-                        'Live monitoring',
-                        SolarIconsBold.heartPulse,
-                        Colors.red,
+                    // Minutes Card
+                    _buildStatCard(
+                      context,
+                      'Minutes',
+                      '45',
+                      Icons.timer,
+                      theme.colorScheme.tertiary,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Streak Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              '🔥',
+                              style: TextStyle(fontSize: 32),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '5-Day Streak',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "You're on fire!\nKeep the momentum going.",
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/trackertest');
-                      },
-                      child: _buildQuickTrackCard(
-                        context,
-                        'AI Activity',
-                        'Track with AI',
-                        SolarIconsBold.cpu,
-                        Colors.deepPurple,
+
+                    const SizedBox(height: 24),
+
+                    // Quick Track Section
+                    Text(
+                      'Quick Track',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        // Add Meal
-                      },
-                      child: _buildQuickTrackCard(
-                        context,
-                        'Add Meal',
-                        'Record your intake',
-                        SolarIconsBold.hamburgerMenu,
-                        Colors.orange,
-                      ),
+
+                    const SizedBox(height: 16),
+
+                    // Quick Track Grid (2x2)
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.2,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/phone_heart_rate');
+                          },
+                          child: _buildQuickTrackCard(
+                            context,
+                            'Heart Rate',
+                            'Live monitoring',
+                            SolarIconsBold.heartPulse,
+                            Colors.red,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/trackertest');
+                          },
+                          child: _buildQuickTrackCard(
+                            context,
+                            'AI Activity',
+                            'Track with AI',
+                            SolarIconsBold.cpu,
+                            Colors.deepPurple,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            // Add Meal
+                          },
+                          child: _buildQuickTrackCard(
+                            context,
+                            'Add Meal',
+                            'Record your intake',
+                            SolarIconsBold.hamburgerMenu,
+                            Colors.orange,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, "/mission");
+                          },
+                          child: _buildQuickTrackCard(
+                            context,
+                            'Log Sleep',
+                            'Track your rest',
+                            SolarIconsBold.moon,
+                            Colors.purple,
+                          ),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, "/mission");
-                      },
-                      child: _buildQuickTrackCard(
-                        context,
-                        'Log Sleep',
-                        'Track your rest',
-                        SolarIconsBold.moon,
-                        Colors.purple,
-                      ),
-                    ),
-                  ],
-                ),
-                
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -329,7 +335,7 @@ class HomeTab extends StatelessWidget {
     Color color,
   ) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -381,7 +387,7 @@ class HomeTab extends StatelessWidget {
     Color color,
   ) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -434,397 +440,439 @@ class HealthTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: Column(
         children: [
-          const PageHeader(
-            title: 'Daily Log',
-            subtitle: 'Today, November 25',
-          ),
+          const PageHeader(title: 'Daily Log', subtitle: 'Today, November 25'),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              
-              const SizedBox(height: 24),
-              
-              // Food Intake Card
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                  const SizedBox(height: 24),
+
+                  // Food Intake Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  SolarIconsBold.hamburgerMenu,
-                                  size: 24,
-                                  color: theme.colorScheme.primary,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      SolarIconsBold.hamburgerMenu,
+                                      size: 24,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Food Intake',
+                                        style: theme.textTheme.titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '1250/2000 kcal',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: () {},
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('Add Food'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.primary,
+                                  foregroundColor: theme.colorScheme.onPrimary,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 0,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Progress Bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: 0.625, // 1250/2000
+                              minHeight: 8,
+                              backgroundColor: theme.colorScheme.surfaceVariant,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.cyan,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Meal Type Tabs
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _buildMealTab(context, 'Breakfast', true),
+                                const SizedBox(width: 8),
+                                _buildMealTab(context, 'Lunch', false),
+                                const SizedBox(width: 8),
+                                _buildMealTab(context, 'Dinner', false),
+                                const SizedBox(width: 8),
+                                _buildMealTab(context, 'Snacks', false),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Food Items
+                          _buildFoodItem(
+                            context,
+                            'Oatmeal with Berries',
+                            '350 kcal',
+                          ),
+                          const SizedBox(height: 12),
+                          _buildFoodItem(context, 'Black Coffee', '5 kcal'),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Hydration Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
                                 children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.cyan.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.water_drop,
+                                      size: 24,
+                                      color: Colors.cyan,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
                                   Text(
-                                    'Food Intake',
+                                    'Hydration',
                                     style: theme.textTheme.titleLarge?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '1250/2000 kcal',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
                                 ],
                               ),
-                            ],
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Add Food'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Progress Bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: LinearProgressIndicator(
-                          value: 0.625, // 1250/2000
-                          minHeight: 8,
-                          backgroundColor: theme.colorScheme.surfaceVariant,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.cyan),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Meal Type Tabs
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildMealTab(context, 'Breakfast', true),
-                            const SizedBox(width: 8),
-                            _buildMealTab(context, 'Lunch', false),
-                            const SizedBox(width: 8),
-                            _buildMealTab(context, 'Dinner', false),
-                            const SizedBox(width: 8),
-                            _buildMealTab(context, 'Snacks', false),
-                          ],
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Food Items
-                      _buildFoodItem(context, 'Oatmeal with Berries', '350 kcal'),
-                      const SizedBox(height: 12),
-                      _buildFoodItem(context, 'Black Coffee', '5 kcal'),
-                    ],
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Hydration Card
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.cyan.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.water_drop,
-                                  size: 24,
-                                  color: Colors.cyan,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
                               Text(
-                                'Hydration',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                                '1.5 / 2.0 L',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                          Text(
-                            '1.5 / 2.0 L',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Circular Progress
-                      Center(
-                        child: SizedBox(
-                          width: 160,
-                          height: 160,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 160,
-                                height: 160,
-                                child: CircularProgressIndicator(
-                                  value: 0.75,
-                                  strokeWidth: 14,
-                                  backgroundColor: theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.cyan),
-                                ),
-                              ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+
+                          const SizedBox(height: 32),
+
+                          // Circular Progress
+                          Center(
+                            child: SizedBox(
+                              width: 160,
+                              height: 160,
+                              child: Stack(
+                                alignment: Alignment.center,
                                 children: [
-                                  Text(
-                                    '75%',
-                                    style: theme.textTheme.displaySmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: theme.colorScheme.onSurface,
+                                  SizedBox(
+                                    width: 160,
+                                    height: 160,
+                                    child: CircularProgressIndicator(
+                                      value: 0.75,
+                                      strokeWidth: 14,
+                                      backgroundColor: theme
+                                          .colorScheme
+                                          .surfaceVariant
+                                          .withValues(alpha: 0.3),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                            Colors.cyan,
+                                          ),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Goal',
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        '75%',
+                                        style: theme.textTheme.displaySmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Goal',
+                                        style: theme.textTheme.bodyLarge
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Water buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildWaterButton(context, '-'),
+                              const SizedBox(width: 40),
+                              _buildWaterButton(context, '+'),
                             ],
                           ),
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Water buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildWaterButton(context, '-'),
-                          const SizedBox(width: 40),
-                          _buildWaterButton(context, '+'),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              
-              const SizedBox(height: 20),
-              
-              // Sleep Card
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+
+                  const SizedBox(height: 20),
+
+                  // Sleep Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.purple.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  SolarIconsBold.moon,
-                                  size: 24,
-                                  color: Colors.purple,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                 children: [
-                                  Text(
-                                    'Sleep',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      SolarIconsBold.moon,
+                                      size: 24,
+                                      color: Colors.purple,
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Total sleep: 7h 30m',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Sleep',
+                                        style: theme.textTheme.titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Total sleep: 7h 30m',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
                                   ),
                                 ],
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  'Edit',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                          TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            ),
-                            child: Text(
-                              'Edit',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
+
+                          const SizedBox(height: 20),
+
+                          // Sleep Time Cards
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surfaceVariant
+                                        .withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Went to Bed',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        '10:30 PM',
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.surfaceVariant
+                                        .withValues(alpha: 0.3),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        'Wake Up',
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        '6:00 AM',
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Sleep Time Cards
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'Went to Bed',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    '10:30 PM',
-                                    style: theme.textTheme.headlineSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'Wake Up',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    '6:00 AM',
-                                    style: theme.textTheme.headlineSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              
+
                   const SizedBox(height: 24),
                 ],
               ),
@@ -837,11 +885,13 @@ class HealthTab extends StatelessWidget {
 
   Widget _buildMealTab(BuildContext context, String label, bool isSelected) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? theme.colorScheme.surfaceVariant : Colors.transparent,
+        color: isSelected
+            ? theme.colorScheme.surfaceVariant
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -855,7 +905,7 @@ class HealthTab extends StatelessWidget {
 
   Widget _buildFoodItem(BuildContext context, String name, String calories) {
     final theme = Theme.of(context);
-    
+
     return Row(
       children: [
         Container(
@@ -892,7 +942,7 @@ class HealthTab extends StatelessWidget {
 
   Widget _buildWaterButton(BuildContext context, String label) {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: 64,
       height: 64,
@@ -927,7 +977,7 @@ class TrackTab extends ConsumerWidget {
           // Invalidate and refresh all providers
           ref.invalidate(dailyStatsProvider);
           ref.invalidate(recentActivitiesProvider);
-          
+
           // Wait for providers to complete
           await Future.wait([
             ref.read(dailyStatsProvider.future),
@@ -940,15 +990,15 @@ class TrackTab extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 24),
-              
+
               // Stats Section
               StatsSection(),
               SizedBox(height: 24),
-              
+
               // CTA Section
               CTASection(),
               SizedBox(height: 24),
-              
+
               // Recent Activity Section
               RecentActivitySection(),
               SizedBox(height: 24),
@@ -974,7 +1024,7 @@ class _ProgressTabState extends State<ProgressTab> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: Column(
@@ -990,279 +1040,292 @@ class _ProgressTabState extends State<ProgressTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                
-                const SizedBox(height: 24),
-                
-                // This Week's Insight Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        SolarIconsBold.lightbulb,
-                        size: 32,
-                        color: theme.colorScheme.primary,
+                    const SizedBox(height: 24),
+
+                    // This Week's Insight Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
+                      child: Row(
+                        children: [
+                          Icon(
+                            SolarIconsBold.lightbulb,
+                            size: 32,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "This Week's Insight",
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Great job on your consistency! You've increased your average daily steps by 15% this week. Keep it up!",
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Weekly Activity Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "This Week's Insight",
-                              style: theme.textTheme.titleMedium?.copyWith(
+                              'Weekly Activity',
+                              style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onPrimaryContainer,
                               ),
                             ),
-                            const SizedBox(height: 8),
                             Text(
-                              "Great job on your consistency! You've increased your average daily steps by 15% this week. Keep it up!",
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
+                              'Active Minutes',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Weekly Activity Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Weekly Activity',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                        // Week/Month Toggle
+                        Container(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: theme.colorScheme.outline.withValues(
+                                alpha: 0.3,
+                              ),
+                            ),
                           ),
-                        ),
-                        Text(
-                          'Active Minutes',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          child: Row(
+                            children: [
+                              _buildToggleButton(context, 'Week', _isWeekView),
+                              _buildToggleButton(
+                                context,
+                                'Month',
+                                !_isWeekView,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                    // Week/Month Toggle
+
+                    const SizedBox(height: 16),
+
+                    // Activity Chart
                     Container(
+                      height: 200,
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: Row(
+                      child: Column(
                         children: [
-                          _buildToggleButton(context, 'Week', _isWeekView),
-                          _buildToggleButton(context, 'Month', !_isWeekView),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Activity Chart',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text('Mon', style: theme.textTheme.bodySmall),
+                              Text('Tue', style: theme.textTheme.bodySmall),
+                              Text('Wed', style: theme.textTheme.bodySmall),
+                              Text('Thu', style: theme.textTheme.bodySmall),
+                              Text('Fri', style: theme.textTheme.bodySmall),
+                              Text('Sat', style: theme.textTheme.bodySmall),
+                              Text('Sun', style: theme.textTheme.bodySmall),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Activity Chart
-                Container(
-                  height: 200,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            'Activity Chart',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+
+                    const SizedBox(height: 24),
+
+                    // Sleep Quality Section
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Text('Mon', style: theme.textTheme.bodySmall),
-                          Text('Tue', style: theme.textTheme.bodySmall),
-                          Text('Wed', style: theme.textTheme.bodySmall),
-                          Text('Thu', style: theme.textTheme.bodySmall),
-                          Text('Fri', style: theme.textTheme.bodySmall),
-                          Text('Sat', style: theme.textTheme.bodySmall),
-                          Text('Sun', style: theme.textTheme.bodySmall),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Sleep Quality Section
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Sleep Quality',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sleep Quality',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Avg. 7h 32m',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'Avg. 7h 32m',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
+                              TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  'View Details',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              'View Details',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                              ),
+                          const SizedBox(height: 16),
+                          // Sleep bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Container(
+                                    height: 12,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Container(
+                                    height: 12,
+                                    color: Colors.lightBlue,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Container(
+                                    height: 12,
+                                    color: Colors.cyan,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    height: 12,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildSleepLegend(context, 'Deep', Colors.blue),
+                              _buildSleepLegend(
+                                context,
+                                'Light',
+                                Colors.lightBlue,
+                              ),
+                              _buildSleepLegend(context, 'Rem', Colors.cyan),
+                              _buildSleepLegend(
+                                context,
+                                'Awake',
+                                Colors.grey.shade300,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      // Sleep bar
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Container(
-                                height: 12,
-                                color: Colors.blue,
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Container(
-                                height: 12,
-                                color: Colors.lightBlue,
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Container(
-                                height: 12,
-                                color: Colors.cyan,
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                height: 12,
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                          ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Your Trends Section
+                    Text(
+                      'Your Trends',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Trends Cards
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTrendCard(
+                            context,
+                            'Steps',
+                            '8,210',
+                            '+1204 vs last week',
+                            SolarIconsBold.walking,
+                            theme.colorScheme.primary,
+                            true,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildSleepLegend(context, 'Deep', Colors.blue),
-                          _buildSleepLegend(context, 'Light', Colors.lightBlue),
-                          _buildSleepLegend(context, 'Rem', Colors.cyan),
-                          _buildSleepLegend(context, 'Awake', Colors.grey.shade300),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 24),
-                
-                // Your Trends Section
-                Text(
-                  'Your Trends',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                // Trends Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTrendCard(
-                        context,
-                        'Steps',
-                        '8,210',
-                        '+1204 vs last week',
-                        SolarIconsBold.walking,
-                        theme.colorScheme.primary,
-                        true,
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildTrendCard(
+                            context,
+                            'Calories',
+                            '8,210',
+                            '+1204 vs last week',
+                            SolarIconsBold.fire,
+                            Colors.orange,
+                            true,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTrendCard(
-                        context,
-                        'Calories',
-                        '8,210',
-                        '+1204 vs last week',
-                        SolarIconsBold.fire,
-                        Colors.orange,
-                        true,
-                      ),
-                    ),
-                  ],
-                ),
-                
+
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -1274,9 +1337,13 @@ class _ProgressTabState extends State<ProgressTab> {
     );
   }
 
-  Widget _buildToggleButton(BuildContext context, String label, bool isSelected) {
+  Widget _buildToggleButton(
+    BuildContext context,
+    String label,
+    bool isSelected,
+  ) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -1292,7 +1359,9 @@ class _ProgressTabState extends State<ProgressTab> {
         child: Text(
           label,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -1302,23 +1371,17 @@ class _ProgressTabState extends State<ProgressTab> {
 
   Widget _buildSleepLegend(BuildContext context, String label, Color color) {
     final theme = Theme.of(context);
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 12,
           height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall,
-        ),
+        Text(label, style: theme.textTheme.bodySmall),
       ],
     );
   }
@@ -1333,7 +1396,7 @@ class _ProgressTabState extends State<ProgressTab> {
     bool isPositive,
   ) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1384,14 +1447,20 @@ class _ProgressTabState extends State<ProgressTab> {
 }
 
 // Profile Tab
-class ProfileTab extends ConsumerWidget {
+class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab> {
+  String? _profileImagePath;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final authState = ref.watch(authNotifierProvider);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: Column(
@@ -1401,7 +1470,9 @@ class ProfileTab extends ConsumerWidget {
             subtitle: 'Manage your account',
             trailing: IconButton(
               icon: const Icon(SolarIconsOutline.settings),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
             ),
           ),
           Expanded(
@@ -1413,284 +1484,294 @@ class ProfileTab extends ConsumerWidget {
                   Container(
                     color: theme.colorScheme.surface,
                     padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: const Text(
-                      'MG',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mark Garcia',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '@mark_garcia',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'FlowFit Member since 2022',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // General Settings Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'General Settings',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildSettingItem(context, 'Privacy Policy', SolarIconsOutline.shieldCheck),
-            _buildSettingItem(context, 'Notification Reminder', SolarIconsOutline.bell),
-            _buildSettingItem(context, 'App Integration', SolarIconsOutline.widget),
-            
-            const SizedBox(height: 24),
-            
-            // My Account Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'My Account',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoItem(context, 'Username', '@mark_garcia'),
-            _buildSettingItem(context, 'Profile Photo', SolarIconsOutline.camera),
-            _buildInfoItem(context, 'Sex', 'Male'),
-            _buildInfoItem(context, 'Date of Birth', '05/12/1990'),
-            _buildInfoItem(context, 'Location', 'New York, NY'),
-            _buildInfoItem(context, 'Email', 'mark.garcia@email.com'),
-            _buildSettingItem(context, 'Change Password', SolarIconsOutline.lock),
-            _buildSettingItem(context, 'Delete Account', SolarIconsOutline.trashBinMinimalistic),
-            _buildSettingItem(
-              context, 
-              'Logout', 
-              SolarIconsOutline.logout,
-              onTap: () async {
-                // Show confirmation dialog
-                final shouldLogout = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Logout'),
-                    content: const Text('Are you sure you want to logout?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Logout'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (shouldLogout == true && context.mounted) {
-                  // Sign out using auth notifier
-                  await ref.read(authNotifierProvider.notifier).signOut();
-                  
-                  // Navigate to welcome screen and clear stack
-                  if (context.mounted) {
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/welcome',
-                      (route) => false,
-                    );
-                  }
-                }
-              },
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // My Goals Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'My Goals',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildGoalItem(
-              context,
-              'Weight Goals',
-              'Current: 145 lbs, Goal weight: 135 lbs, Weekly Goal: 1 lb/week',
-            ),
-            _buildGoalItem(
-              context,
-              'Fitness Preference, Fitness Goals',
-              'Activity Level: Moderate, Workout: 4 times/workout 45 min',
-            ),
-            _buildGoalItem(
-              context,
-              'Nutrition Goals',
-              'Default Macros Goal: 2000 calories, Daily Macros Goal (Custom): 2200 calories',
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Progress Timeline Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Progress Timeline',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildTimelineButton(context, 'All', true),
-                        const SizedBox(width: 8),
-                        _buildTimelineButton(context, '1 Week', false),
-                        const SizedBox(width: 8),
-                        _buildTimelineButton(context, '1 Month', false),
-                        const SizedBox(width: 8),
-                        _buildTimelineButton(context, '3 Months', false),
-                        const SizedBox(width: 8),
-                        _buildTimelineButton(context, '6 Months', false),
+                        GestureDetector(
+                          onTap: () => _showPhotoPickerDialog(context),
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 40,
+                                backgroundColor: theme.colorScheme.primary,
+                                backgroundImage: _profileImagePath != null
+                                    ? FileImage(File(_profileImagePath!))
+                                    : null,
+                                child: _profileImagePath == null
+                                    ? const Text(
+                                        'MG',
+                                        style: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: theme.colorScheme.surface,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    SolarIconsOutline.camera,
+                                    size: 16,
+                                    color: theme.colorScheme.onPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Mark Garcia',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '@mark_garcia',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'FlowFit Member since 2022',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Weight Progress Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Weight Progress',
+
+                  const SizedBox(height: 16),
+
+                  // My Account Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'My Account',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoItem(context, 'Sex', 'Male'),
+                  _buildInfoItem(context, 'Date of Birth', '05/12/2000'),
+                  _buildInfoItem(context, 'Email', 'mark.garcia@email.com'),
+                  _buildSettingItem(
+                    context,
+                    'Change Password',
+                    SolarIconsOutline.lock,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/change-password');
+                    },
+                  ),
+                  _buildSettingItem(
+                    context,
+                    'Delete Account',
+                    SolarIconsOutline.trashBinMinimalistic,
+                    onTap: () {
+                      Navigator.pushNamed(context, '/delete-account');
+                    },
+                  ),
+                  _buildSettingItem(
+                    context,
+                    'Logout',
+                    SolarIconsOutline.logout,
+                    onTap: () {
+                      // Navigate to welcome screen
+                      Navigator.of(
+                        context,
+                      ).pushNamedAndRemoveUntil('/welcome', (route) => false);
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // My Goals Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'My Goals',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildGoalItem(
+                    context,
+                    'Weight Goals',
+                    'Current: 145 lbs, Goal weight: 135 lbs, Weekly Goal: 1 lb/week',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/weight-goals');
+                    },
+                  ),
+                  _buildGoalItem(
+                    context,
+                    'Fitness Preference, Fitness Goals',
+                    'Activity Level: Moderate, Workout: 4 times/workout 45 min',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/fitness-goals');
+                    },
+                  ),
+                  _buildGoalItem(
+                    context,
+                    'Nutrition Goals',
+                    'Default Macros Goal: 2000 calories, Daily Macros Goal (Custom): 2200 calories',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/nutrition-goals');
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Progress Timeline Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '145 lbs',
-                          style: theme.textTheme.headlineMedium?.copyWith(
+                          'Progress Timeline',
+                          style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 12),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildTimelineButton(context, 'All', true),
+                              const SizedBox(width: 8),
+                              _buildTimelineButton(context, '1 Week', false),
+                              const SizedBox(width: 8),
+                              _buildTimelineButton(context, '1 Month', false),
+                              const SizedBox(width: 8),
+                              _buildTimelineButton(context, '3 Months', false),
+                              const SizedBox(width: 8),
+                              _buildTimelineButton(context, '6 Months', false),
+                            ],
                           ),
-                          child: Text(
-                            'Last 30 Days -2%',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w600,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Weight Progress Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Weight Progress',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Simple chart placeholder
-                    Container(
-                      height: 120,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Weight Chart',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                '145 lbs',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Last 30 Days -2%',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
+                          const SizedBox(height: 16),
+                          // Simple chart placeholder
+                          Container(
+                            height: 120,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: theme.colorScheme.outline.withValues(
+                                  alpha: 0.2,
+                                ),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Weight Chart',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Text('Jan', style: theme.textTheme.bodySmall),
+                              Text('Feb', style: theme.textTheme.bodySmall),
+                              Text('Mar', style: theme.textTheme.bodySmall),
+                              Text('Apr', style: theme.textTheme.bodySmall),
+                              Text('May', style: theme.textTheme.bodySmall),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        Text('Jan', style: theme.textTheme.bodySmall),
-                        Text('Feb', style: theme.textTheme.bodySmall),
-                        Text('Mar', style: theme.textTheme.bodySmall),
-                        Text('Apr', style: theme.textTheme.bodySmall),
-                        Text('May', style: theme.textTheme.bodySmall),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
+                  ),
+
                   const SizedBox(height: 24),
                 ],
               ),
@@ -1701,22 +1782,221 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingItem(BuildContext context, String title, IconData icon, {VoidCallback? onTap}) {
+  Future<void> _pickImageFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _profileImagePath = image.path;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile photo updated'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error taking photo: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        setState(() {
+          _profileImagePath = image.path;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile photo updated'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error selecting photo: $e'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  void _removePhoto() {
+    setState(() {
+      _profileImagePath = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile photo removed'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showPhotoPickerDialog(BuildContext context) {
     final theme = Theme.of(context);
-    
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.3,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Change Profile Photo',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: 0.5,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      SolarIconsOutline.camera,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  title: const Text('Take Photo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImageFromCamera();
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: 0.5,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      SolarIconsOutline.gallery,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImageFromGallery();
+                  },
+                ),
+                if (_profileImagePath != null)
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        SolarIconsOutline.trashBinMinimalistic,
+                        color: Colors.red,
+                      ),
+                    ),
+                    title: const Text(
+                      'Remove Photo',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _removePhoto();
+                    },
+                  ),
+                const SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSettingItem(
+    BuildContext context,
+    String title,
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
+    final theme = Theme.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
       color: theme.colorScheme.surface,
       child: ListTile(
         leading: Icon(
           icon,
-          color: title == 'Logout' ? Colors.red : theme.colorScheme.onSurfaceVariant,
+          color: title == 'Logout'
+              ? Colors.red
+              : theme.colorScheme.onSurfaceVariant,
         ),
         title: Text(
           title,
-          style: TextStyle(
-            color: title == 'Logout' ? Colors.red : null,
-          ),
+          style: TextStyle(color: title == 'Logout' ? Colors.red : null),
         ),
         trailing: Icon(
           Icons.arrow_forward_ios,
@@ -1730,7 +2010,7 @@ class ProfileTab extends ConsumerWidget {
 
   Widget _buildInfoItem(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
       color: theme.colorScheme.surface,
@@ -1738,10 +2018,7 @@ class ProfileTab extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium,
-          ),
+          Text(label, style: theme.textTheme.bodyMedium),
           Text(
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -1753,9 +2030,14 @@ class ProfileTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildGoalItem(BuildContext context, String title, String description) {
+  Widget _buildGoalItem(
+    BuildContext context,
+    String title,
+    String description, {
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
       color: theme.colorScheme.surface,
@@ -1768,28 +2050,36 @@ class ProfileTab extends ConsumerWidget {
           ),
         ),
         trailing: Icon(
-          Icons.arrow_forward_ios,
+          SolarIconsOutline.altArrowRight,
           size: 16,
           color: theme.colorScheme.onSurfaceVariant,
         ),
-        onTap: () {},
+        onTap: onTap ?? () {},
       ),
     );
   }
 
-  Widget _buildTimelineButton(BuildContext context, String label, bool isSelected) {
+  Widget _buildTimelineButton(
+    BuildContext context,
+    String label,
+    bool isSelected,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
+        color: isSelected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         label,
         style: theme.textTheme.bodySmall?.copyWith(
-          color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+          color: isSelected
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),

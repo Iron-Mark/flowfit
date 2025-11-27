@@ -13,6 +13,7 @@ class MissionBottomSheet extends StatelessWidget {
   final maplat.LatLng? lastCenter;
   final void Function(maplat.LatLng) onAddAtLatLng;
   final void Function(GeofenceMission) onOpenMission;
+  final void Function(GeofenceMission) onFocusMission;
 
   const MissionBottomSheet({
     required this.repo,
@@ -21,6 +22,7 @@ class MissionBottomSheet extends StatelessWidget {
     required this.lastCenter,
     required this.onAddAtLatLng,
     required this.onOpenMission,
+    required this.onFocusMission,
     super.key,
   });
 
@@ -73,6 +75,17 @@ class MissionBottomSheet extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    iconSize: 20,
+                    icon: const Icon(Icons.flag),
+                    tooltip: 'Focus & Navigate',
+                    onPressed: () async {
+                      // Focus is the primary action — start navigation UI for this mission
+                      onFocusMission(m);
+                    },
+                  ),
                   Transform.scale(
                     scale: 0.8,
                     child: Switch(

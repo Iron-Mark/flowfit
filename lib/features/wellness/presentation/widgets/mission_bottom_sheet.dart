@@ -13,6 +13,7 @@ class MissionBottomSheet extends StatelessWidget {
   final maplat.LatLng? lastCenter;
   final void Function(maplat.LatLng) onAddAtLatLng;
   final void Function(GeofenceMission) onOpenMission;
+  final void Function(GeofenceMission) onFocusMission;
 
   const MissionBottomSheet({
     required this.repo,
@@ -21,6 +22,7 @@ class MissionBottomSheet extends StatelessWidget {
     required this.lastCenter,
     required this.onAddAtLatLng,
     required this.onOpenMission,
+    required this.onFocusMission,
     super.key,
   });
 
@@ -68,13 +70,22 @@ class MissionBottomSheet extends StatelessWidget {
               ],
             ),
             trailing: SizedBox(
-              width: 100,
+              width: 180,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  // Make focus a primary action with a big, clear affordance
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      onFocusMission(m);
+                    },
+                    icon: const Icon(Icons.flag),
+                    label: const Text('Focus'),
+                  ),
+                  const SizedBox(width: 8.0),
                   Transform.scale(
-                    scale: 0.8,
+                    scale: 0.72,
                     child: Switch(
                       value: m.isActive,
                       onChanged: (v) => v ? service.activateMission(m.id) : service.deactivateMission(m.id),
@@ -90,7 +101,8 @@ class MissionBottomSheet extends StatelessWidget {
                 ],
               ),
             ),
-            onTap: () => onOpenMission(m),
+            onTap: () => onFocusMission(m),
+            onLongPress: () => onOpenMission(m),
           ),
         );
       },

@@ -32,6 +32,7 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
   maplat.LatLng? _initialCenter;
   maplat.LatLng? _lastCenter;
   StreamSubscription<GeofenceEvent>? _eventsSub;
+  StreamSubscription<String>? _focusRequestsSub;
   bool _missionsVisible = true;
   bool _showTutorial = true; // Show tutorial on first visit
   // Place mode state
@@ -100,6 +101,25 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
       });
+      // Listen for focus requests (e.g., pushed by MoodTrackerService or notifications)
+      _focusRequestsSub = service.focusRequests.listen((id) async {
+        final repo = _getRepo();
+        if (id == 'add_sanctuary') {
+          // Prompt user to start place mode at current location
+          try {
+            final pos = await Geolocator.getCurrentPosition();
+            _startPlacingAtLatLng(maplat.LatLng(pos.latitude, pos.longitude));
+            return;
+          } catch (_) {
+            return;
+          }
+        }
+        final mission = repo.getById(id);
+        if (mission != null) {
+          // Start focus mode for this mission
+          _startFocusMission(mission);
+        }
+      });
     } catch (e) {
       // ignore
     }
@@ -109,6 +129,7 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
   void dispose() {
     _mapController?.dispose();
     _eventsSub?.cancel();
+    _focusRequestsSub?.cancel();
     _placingTitleController.dispose();
     _focusTimer?.cancel();
     super.dispose();
@@ -182,11 +203,19 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
   }
 
   // Focus a mission in the UI and start periodic updates for ETA/distance
-  void _startFocusMission(GeofenceMission mission) {
+  Future<void> _startFocusMission(GeofenceMission mission) async {
     _focusTimer?.cancel();
+    // ensure mission is active
+    try {
+      await _getService().activateMission(mission.id);
+    } catch (_) {}
     setState(() {
       _focusedMission = mission;
+      // hide missions to focus map UI
+      _missionsVisible = false;
     });
+    // center on mission
+    _mapController?.move(maplat.LatLng(mission.center.latitude, mission.center.longitude), 16.0);
     _updateFocusMetrics();
     _focusTimer = Timer.periodic(const Duration(seconds: 5), (_) => _updateFocusMetrics());
   }
@@ -282,20 +311,7 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
                     ],
                   ),
           ),
-          // Focus overlay when a mission is selected for navigation
-          if (_focusedMission != null)
-            FocusMissionOverlay(
-              mission: _focusedMission!,
-              distanceMeters: _focusedDistanceMeters,
-              eta: _focusedEta,
-              isActive: _focusedMission!.isActive,
-              speedMetersPerSecond: _focusSpeedMps,
-              onUnfocus: _stopFocusMission,
-              onCenter: () => _mapController?.move(maplat.LatLng(_focusedMission!.center.latitude, _focusedMission!.center.longitude), 16.0),
-              onActivate: () async => await _getService().activateMission(_focusedMission!.id),
-              onDeactivate: () async => await _getService().deactivateMission(_focusedMission!.id),
-              onSpeedChanged: (v) => setState(() { _focusSpeedMps = v; _updateFocusMetrics(); }),
-            ),
+          // (Focus overlay moved below so it can be placed above the bottom sheet)
 
           // top overlay controls (back, import/export)
           SafeArea(
@@ -355,8 +371,27 @@ class _WellnessMapsPageState extends State<WellnessMapsPage> {
               lastCenter: _lastCenter,
               onAddAtLatLng: (lat) async => await _addGeofenceAtLatLng(lat),
               onOpenMission: (m) => _showMissionActions(m),
+              // Make Focus & Navigate the primary action: request a UI focus via the
+              // GeofenceService stream so it behaves the same as MoodTrackerService
+              // invoked focus requests (and works even when triggered from notifications).
+              onFocusMission: (m) => service.requestFocus(m.id),
             ),
           
+          // Focus overlay when a mission is selected for navigation (positioned above bottom sheet)
+          if (_focusedMission != null)
+            FocusMissionOverlay(
+              mission: _focusedMission!,
+              distanceMeters: _focusedDistanceMeters,
+              eta: _focusedEta,
+              isActive: _focusedMission!.isActive,
+              speedMetersPerSecond: _focusSpeedMps,
+              onUnfocus: _stopFocusMission,
+              onCenter: () => _mapController?.move(maplat.LatLng(_focusedMission!.center.latitude, _focusedMission!.center.longitude), 16.0),
+              onActivate: () async => await _getService().activateMission(_focusedMission!.id),
+              onDeactivate: () async => await _getService().deactivateMission(_focusedMission!.id),
+              onSpeedChanged: (v) => setState(() { _focusSpeedMps = v; _updateFocusMetrics(); }),
+            ),
+
           // Tutorial overlay (shows on first visit)
           if (_showTutorial)
             MapTutorialOverlay(

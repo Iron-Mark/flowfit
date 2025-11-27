@@ -4,224 +4,433 @@ import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
 
-class SurveyIntroScreen extends ConsumerWidget {
+class SurveyIntroScreen extends ConsumerStatefulWidget {
   const SurveyIntroScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SurveyIntroScreen> createState() => _SurveyIntroScreenState();
+}
+
+class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.9,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Get user data from auth state
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
     final userName = user?.email?.split('@').first ?? 'there';
     final userId = user?.id;
-    
+
     // Also check for args passed from signup
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final passedName = args?['name'] as String?;
     final displayName = passedName ?? userName;
+
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          'Quick Setup',
+          style: TextStyle(
+            color: Color(0xFF314158),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(
+              child: Text(
+                '0/4',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
           child: Column(
             children: [
-              const Spacer(),
-              
-              // Illustration
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  SolarIconsBold.heartPulse,
-                  size: 100,
-                  color: AppTheme.primaryBlue,
-                ),
-              ),
-              
-              const SizedBox(height: 48),
-              
-              // Title
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.flash_on, color: AppTheme.primaryBlue, size: 28),
-                  SizedBox(width: 8),
-                  Text(
-                    'Quick Setup',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+              // Progress indicator
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 8),
-              
-              Text(
-                '(2 Minutes)',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // Description
-              Text(
-                'Let\'s personalize FlowFit for you, $displayName!',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Features
-              _buildFeature(
-                icon: SolarIconsBold.fire,
-                text: 'Daily calorie target',
-                color: Colors.orange,
-              ),
-              const SizedBox(height: 12),
-              _buildFeature(
-                icon: SolarIconsBold.heartPulse,
-                text: 'Heart rate zones',
-                color: Colors.red,
-              ),
-              const SizedBox(height: 12),
-              _buildFeature(
-                icon: SolarIconsBold.target,
-                text: 'Personalized goals',
-                color: AppTheme.primaryBlue,
-              ),
-              
-              const SizedBox(height: 32),
-              
-              Text(
-                'Just 4 quick questions!',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Progress dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      shape: BoxShape.circle,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                  );
-                }),
-              ),
-              
-              const Spacer(),
-              
-              // Start Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Pass user ID to survey flow
-                    final surveyArgs = {
-                      'userId': userId,
-                      'name': displayName,
-                      ...?args,
-                    };
-                    Navigator.pushReplacementNamed(
-                      context,
-                      '/survey_basic_info',
-                      arguments: surveyArgs,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'LET\'S PERSONALIZE',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-              
-              const SizedBox(height: 16),
-              
-              // Skip Button
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/dashboard');
-                },
-                child: Text(
-                  'I\'ll do this later →',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+
+                    // Illustration with scale animation
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0.95, end: 1.0),
+                          duration: const Duration(milliseconds: 1500),
+                          curve: Curves.easeInOut,
+                          builder: (context, scale, child) {
+                            return Transform.scale(
+                              scale: scale,
+                              child: Container(
+                                width: 160,
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryBlue.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  SolarIconsBold.heartPulse,
+                                  size: 100,
+                                  color: AppTheme.primaryBlue,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Time estimate badge with fade
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryBlue.withValues(alpha: 0.12),
+                              AppTheme.primaryBlue.withValues(alpha: 0.08),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.primaryBlue.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '2 Minutes',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: const Duration(milliseconds: 1200),
+                              curve: Curves.elasticOut,
+                              builder: (context, value, child) {
+                                return Transform.scale(
+                                  scale: 0.8 + (value * 0.2),
+                                  child: const Icon(
+                                    Icons.flash_on,
+                                    color: AppTheme.primaryBlue,
+                                    size: 18,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Description with fade and slide
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF314158),
+                                ),
+                            children: [
+                              const TextSpan(
+                                text: 'Let\'s personalize FlowFit for you, ',
+                              ),
+                              TextSpan(
+                                text: displayName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryBlue,
+                                ),
+                              ),
+                              const TextSpan(text: '!'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Features
+                    Center(
+                      child: IntrinsicWidth(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildFeature(
+                              icon: SolarIconsBold.fire,
+                              text: 'Daily calorie target',
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildFeature(
+                              icon: SolarIconsBold.heartPulse,
+                              text: 'Heart rate zones',
+                              color: Colors.red,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildFeature(
+                              icon: SolarIconsBold.target,
+                              text: 'Personalized goals',
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Text(
+                        'Just 4 quick questions!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Start Button with animation
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Pass user ID to survey flow
+                              final surveyArgs = {
+                                'userId': userId,
+                                'name': displayName,
+                                ...?args,
+                              };
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/survey_basic_info',
+                                arguments: surveyArgs,
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'LET\'S PERSONALIZE',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Skip Button with animation
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/dashboard',
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey[700],
+                            side: BorderSide(
+                              color: Colors.grey[300]!,
+                              width: 1,
+                            ),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'I\'LL DO THIS LATER →',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Text(
+                        '(You can always skip and use smart defaults)',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-              
-              Text(
-                '(You can always skip and use smart defaults)',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              
-              const SizedBox(height: 16),
             ],
           ),
         ),
       ),
     );
   }
-  
+
   Widget _buildFeature({
     required IconData icon,
     required String text,
     required Color color,
   }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(width: 12),
         Text(
           text,
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black87,
-          ),
+          style: const TextStyle(fontSize: 16, color: Color(0xFF314158)),
         ),
       ],
     );

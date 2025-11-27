@@ -21,9 +21,6 @@ import 'screens/auth/signup_screen.dart';
 import 'screens/auth/email_verification_screen.dart';
 import 'screens/phone_home.dart';
 import 'screens/phone/phone_heart_rate_screen.dart';
-import 'screens/onboarding/survey_screen_1.dart';
-import 'screens/onboarding/survey_screen_2.dart';
-import 'screens/onboarding/survey_screen_3.dart';
 import 'screens/onboarding/survey_intro_screen.dart';
 import 'screens/onboarding/survey_basic_info_screen.dart';
 import 'screens/onboarding/survey_body_measurements_screen.dart';
@@ -51,7 +48,7 @@ import 'widgets/debug_route_menu.dart';
 Future<void> main() async {
   // Ensure Flutter bindings are initialized before async operations
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Supabase with configuration from secrets and deep link support
   await Supabase.initialize(
     url: SupabaseConfig.url,
@@ -60,10 +57,10 @@ Future<void> main() async {
       authFlowType: AuthFlowType.pkce, // Use PKCE flow for mobile security
     ),
   );
-  
+
   // Initialize deep link handler
   DeepLinkHandler().initialize();
-  
+
   runApp(const ProviderScope(child: FlowFitPhoneApp()));
 }
 
@@ -138,19 +135,16 @@ class FlowFitPhoneApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/signup': (context) => const SignUpScreen(),
           '/email_verification': (context) => const EmailVerificationScreen(),
-          // Old survey screens (kept for backward compatibility)
-          '/survey1': (context) => const SurveyScreen1(),
-          '/survey2': (context) => const SurveyScreen2(),
-          '/survey3': (context) => const SurveyScreen3(),
-          // New optimized survey flow
-          '/survey_intro': (context) => const SurveyIntroScreen(),
-          '/survey_basic_info': (context) => const SurveyBasicInfoScreen(),
+          // Survey flow (4 steps)
+          '/survey_intro': (context) => const SurveyIntroScreen(), // Step 0
+          '/survey_basic_info': (context) =>
+              const SurveyBasicInfoScreen(), // Step 1
           '/survey_body_measurements': (context) =>
-              const SurveyBodyMeasurementsScreen(),
+              const SurveyBodyMeasurementsScreen(), // Step 2
           '/survey_activity_goals': (context) =>
-              const SurveyActivityGoalsScreen(),
+              const SurveyActivityGoalsScreen(), // Step 3
           '/survey_daily_targets': (context) =>
-              const SurveyDailyTargetsScreen(),
+              const SurveyDailyTargetsScreen(), // Step 4
           '/onboarding1': (context) => const OnboardingScreen(),
           '/dashboard': (context) => const DashboardScreen(),
           '/trackertest': (context) => const TrackerPage(),

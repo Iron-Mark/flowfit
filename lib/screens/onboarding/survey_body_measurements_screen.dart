@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
+import '../../widgets/survey_app_bar.dart';
 
 class SurveyBodyMeasurementsScreen extends ConsumerStatefulWidget {
   const SurveyBodyMeasurementsScreen({super.key});
@@ -16,42 +16,51 @@ class SurveyBodyMeasurementsScreen extends ConsumerStatefulWidget {
 class _SurveyBodyMeasurementsScreenState
     extends ConsumerState<SurveyBodyMeasurementsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _weightController = TextEditingController();
   final _heightController = TextEditingController();
+  final _weightController = TextEditingController();
+  String _heightUnit = 'cm';
+  String _weightUnit = 'kg';
 
   @override
   void initState() {
     super.initState();
     // Load existing data if available
     final surveyState = ref.read(surveyNotifierProvider);
-    final weight = surveyState.surveyData['weight'];
-    if (weight != null) {
-      _weightController.text = weight.toString();
-    }
     final height = surveyState.surveyData['height'];
     if (height != null) {
       _heightController.text = height.toString();
+    }
+    final weight = surveyState.surveyData['weight'];
+    if (weight != null) {
+      _weightController.text = weight.toString();
     }
   }
 
   @override
   void dispose() {
-    _weightController.dispose();
     _heightController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
+  bool get _canContinue =>
+      _heightController.text.isNotEmpty && _weightController.text.isNotEmpty;
+
   Future<void> _handleNext() async {
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
       // Save data to survey notifier
       final surveyNotifier = ref.read(surveyNotifierProvider.notifier);
       await surveyNotifier.updateSurveyData(
-        'weight',
-        double.parse(_weightController.text),
-      );
-      await surveyNotifier.updateSurveyData(
         'height',
         double.parse(_heightController.text),
+      );
+      await surveyNotifier.updateSurveyData(
+        'weight',
+        double.parse(_weightController.text),
       );
 
       // Validate using the notifier's validation method
@@ -78,285 +87,342 @@ class _SurveyBodyMeasurementsScreenState
           arguments: args,
         );
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
-  }
-
-  void _handleBack() {
-    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: _handleBack,
-        ),
-        title: const Text(
-          'Body Measurements',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '2/4',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: AppTheme.background,
+      appBar: const SurveyAppBar(currentStep: 2, totalSteps: 4),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Progress indicator
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      const Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Icon(SolarIconsBold.scale, color: AppTheme.primaryBlue, size: 24),
-                          SizedBox(width: 8),
+                          // Progress Indicator
+                          const SurveyProgressIndicator(
+                            currentStep: 2,
+                            totalSteps: 4,
+                          ),
+
+                          const SizedBox(height: 32),
+
+                          // Title
                           Text(
-                            'Your body measurements',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
+                            'Your measurements',
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryBlue,
+                                ),
                           ),
-                        ],
-                      ),
 
-                      const SizedBox(height: 8),
+                          const SizedBox(height: 8),
 
-                      Text(
-                        'Help us calculate your daily targets',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-                      
-                      Divider(color: Colors.grey[300], thickness: 1),
-
-                      const SizedBox(height: 24),
-
-                      // Weight Field
-                      const Text(
-                        'Weight (kg)',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _weightController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your weight in kg',
-                          prefixIcon: Icon(SolarIconsBold.scale),
-                          suffixText: 'kg',
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
+                          Text(
+                            'Help us calculate accurate metrics',
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Weight is required';
-                          }
-                          final weight = double.tryParse(value);
-                          if (weight == null) {
-                            return 'Please enter a valid number';
-                          }
-                          if (weight <= 0 || weight >= 500) {
-                            return 'Weight must be between 0 and 500 kg';
-                          }
-                          return null;
-                        },
-                      ),
 
-                      const SizedBox(height: 24),
+                          const SizedBox(height: 40),
 
-                      // Height Field
-                      const Text(
-                        'Height (cm)',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _heightController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your height in cm',
-                          prefixIcon: Icon(SolarIconsBold.ruler),
-                          suffixText: 'cm',
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
+                          // Height Input
+                          Text(
+                            'Height',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF314158),
+                                ),
                           ),
-                        ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Height is required';
-                          }
-                          final height = double.tryParse(value);
-                          if (height == null) {
-                            return 'Please enter a valid number';
-                          }
-                          if (height <= 0 || height >= 300) {
-                            return 'Height must be between 0 and 300 cm';
-                          }
-                          return null;
-                        },
-                      ),
 
-                      const SizedBox(height: 32),
+                          const SizedBox(height: 12),
 
-                      // Info box
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryBlue.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.primaryBlue.withOpacity(0.2),
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: _heightController,
+                                  keyboardType: TextInputType.number,
+                                  style: const TextStyle(
+                                    color: AppTheme.text,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter height',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey[50],
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: AppTheme.primaryBlue,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 20,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Height is required';
+                                    }
+                                    final height = double.tryParse(value);
+                                    if (height == null || height <= 0) {
+                                      return 'Enter a valid height';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) => setState(() {}),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Container(
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.grey[200]!,
+                                    ),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _heightUnit,
+                                      isExpanded: true,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      dropdownColor: Colors.white,
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: AppTheme.primaryBlue,
+                                      ),
+                                      style: const TextStyle(
+                                        color: AppTheme.text,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                      items: ['cm', 'ft'].map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                SolarIconsBold.ruler,
+                                                size: 16,
+                                                color: _heightUnit == value
+                                                    ? AppTheme.primaryBlue
+                                                    : Colors.grey,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(value),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        if (newValue != null) {
+                                          setState(
+                                            () => _heightUnit = newValue,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              SolarIconsBold.infoCircle,
-                              color: AppTheme.primaryBlue,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'We use this to calculate your BMI and personalized calorie targets',
+
+                          const SizedBox(height: 24),
+
+                          // Weight Input
+                          Text(
+                            'Weight',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF314158),
+                                ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: _weightController,
+                                  keyboardType: TextInputType.number,
+                                  style: const TextStyle(
+                                    color: AppTheme.text,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter weight',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey[50],
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: const BorderSide(
+                                        color: AppTheme.primaryBlue,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 20,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Weight is required';
+                                    }
+                                    final weight = double.tryParse(value);
+                                    if (weight == null || weight <= 0) {
+                                      return 'Enter a valid weight';
+                                    }
+                                    return null;
+                                  },
+                                  onChanged: (value) => setState(() {}),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Container(
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.grey[200]!,
+                                    ),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _weightUnit,
+                                      isExpanded: true,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                      dropdownColor: Colors.white,
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: AppTheme.primaryBlue,
+                                      ),
+                                      style: const TextStyle(
+                                        color: AppTheme.text,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                      items: ['kg', 'lbs'].map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                SolarIconsBold.dumbbellSmall,
+                                                size: 16,
+                                                color: _weightUnit == value
+                                                    ? AppTheme.primaryBlue
+                                                    : Colors.grey,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(value),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        if (newValue != null) {
+                                          setState(
+                                            () => _weightUnit = newValue,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const Spacer(),
+
+                          // Continue Button
+                          SizedBox(
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: _canContinue ? _handleNext : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primaryBlue,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.grey[300],
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Continue',
                                 style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[700],
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Next Button
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _handleNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'CONTINUE →',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
-
 }

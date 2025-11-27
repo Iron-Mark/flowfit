@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
+import '../../widgets/survey_app_bar.dart';
 
 class SurveyBasicInfoScreen extends ConsumerStatefulWidget {
   const SurveyBasicInfoScreen({super.key});
 
   @override
-  ConsumerState<SurveyBasicInfoScreen> createState() => _SurveyBasicInfoScreenState();
+  ConsumerState<SurveyBasicInfoScreen> createState() =>
+      _SurveyBasicInfoScreenState();
 }
 
 class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
@@ -17,34 +19,32 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
   String? _selectedGender;
   String _userName = '';
 
-  final List<Map<String, dynamic>> _genderOptions = [
-    {'value': 'male', 'label': 'Male', 'icon': SolarIconsBold.user},
-    {'value': 'female', 'label': 'Female', 'icon': SolarIconsBold.user},
-    {'value': 'other', 'label': 'Other', 'icon': SolarIconsBold.user},
-    {'value': 'prefer_not_to_say', 'label': 'Prefer not to say', 'icon': SolarIconsBold.user},
-  ];
-
   @override
   void initState() {
     super.initState();
     // Get user name from arguments (passed from signup)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       final name = args?['name'] as String?;
       if (name != null && name.isNotEmpty) {
         setState(() {
           _userName = name;
         });
         // Save to survey data
-        ref.read(surveyNotifierProvider.notifier).updateSurveyData('fullName', name);
+        ref
+            .read(surveyNotifierProvider.notifier)
+            .updateSurveyData('fullName', name);
       }
     });
-    
-    // Load existing data if available
+
+    // Load existing data if available or set default
     final surveyState = ref.read(surveyNotifierProvider);
     final age = surveyState.surveyData['age'];
     if (age != null) {
       _ageController.text = age.toString();
+    } else {
+      _ageController.text = '18'; // Default age
     }
     _selectedGender = surveyState.surveyData['gender'] as String?;
   }
@@ -53,6 +53,42 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
   void dispose() {
     _ageController.dispose();
     super.dispose();
+  }
+
+  bool get _canContinue =>
+      _selectedGender != null && _ageController.text.isNotEmpty;
+
+  void _incrementAge() {
+    final currentAge = int.tryParse(_ageController.text) ?? 0;
+    if (currentAge < 120) {
+      _ageController.text = (currentAge + 1).toString();
+      setState(() {});
+    }
+  }
+
+  void _decrementAge() {
+    final currentAge = int.tryParse(_ageController.text) ?? 0;
+    if (currentAge > 13) {
+      _ageController.text = (currentAge - 1).toString();
+      setState(() {});
+    }
+  }
+
+  String? _validateAge(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your age';
+    }
+    final age = int.tryParse(value);
+    if (age == null) {
+      return 'Please enter a valid number';
+    }
+    if (age < 13) {
+      return 'You must be at least 13 years old';
+    }
+    if (age > 120) {
+      return 'Please enter a valid age';
+    }
+    return null;
   }
 
   Future<void> _handleNext() async {
@@ -69,7 +105,10 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
 
       // Save data to survey notifier
       final surveyNotifier = ref.read(surveyNotifierProvider.notifier);
-      await surveyNotifier.updateSurveyData('age', int.parse(_ageController.text));
+      await surveyNotifier.updateSurveyData(
+        'age',
+        int.parse(_ageController.text),
+      );
       await surveyNotifier.updateSurveyData('gender', _selectedGender);
 
       // Validate using the notifier's validation method
@@ -88,7 +127,8 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
 
       // Navigate to next screen
       if (mounted) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+        final args =
+            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
         Navigator.pushReplacementNamed(
           context,
           '/survey_body_measurements',
@@ -101,254 +141,340 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Basic Info',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                '1/4',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
+      backgroundColor: AppTheme.background,
+      appBar: const SurveyAppBar(currentStep: 1, totalSteps: 4),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Progress Indicator
+                        const SurveyProgressIndicator(
+                          currentStep: 1,
+                          totalSteps: 4,
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Title
+                        Text(
+                          'Tell us about yourself',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryBlue,
+                              ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Text(
+                          'This helps us personalize your experience',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: Colors.grey[600]),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Gender Selection
+                        Text(
+                          'Gender',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF314158),
+                              ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildGenderCard('Male', Icons.male),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildGenderCard('Female', Icons.female),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildGenderCard(
+                                'Other',
+                                SolarIconsBold.user,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Age Input
+                        Text(
+                          'Age',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF314158),
+                              ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        _buildAgeInput(),
+
+                        const Spacer(),
+
+                        // Continue Button
+                        SizedBox(
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _canContinue ? _handleNext : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryBlue,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.grey[300],
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Continue',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAgeInput() {
+    final currentAge = int.tryParse(_ageController.text);
+    final canDecrement = currentAge != null && currentAge > 13;
+    final canIncrement = currentAge != null && currentAge < 120;
+
+    return Form(
+      key: _formKey,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Decrement Button
+          _buildAdjustButton(
+            icon: Icons.remove_rounded,
+            onTap: canDecrement ? _decrementAge : null,
+            enabled: canDecrement,
+          ),
+
+          // Age Display
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _ageController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 72,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryBlue,
+                    height: 1.0,
+                    letterSpacing: -3,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    errorStyle: TextStyle(fontSize: 0, height: 0),
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  validator: _validateAge,
+                  onChanged: (value) => setState(() {}),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'years old',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
             ),
+          ),
+
+          // Increment Button
+          _buildAdjustButton(
+            icon: Icons.add_rounded,
+            onTap: canIncrement ? _incrementAge : null,
+            enabled: canIncrement,
           ),
         ],
       ),
-      body: SafeArea(
+    );
+  }
+
+  Widget _buildAdjustButton({
+    required IconData icon,
+    required VoidCallback? onTap,
+    required bool enabled,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: enabled ? AppTheme.primaryBlue : Colors.grey[300],
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: AppTheme.primaryBlue.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Icon(icon, size: 32, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildGenderCard(String gender, IconData icon) {
+    final isSelected = _selectedGender == gender;
+
+    // Define colors based on gender
+    Color selectedColor;
+    Color unselectedIconColor;
+
+    switch (gender) {
+      case 'Male':
+        selectedColor = AppTheme.primaryBlue;
+        unselectedIconColor = AppTheme.primaryBlue.withValues(alpha: 0.4);
+        break;
+      case 'Female':
+        selectedColor = const Color(0xFFFF69B4); // Hot pink
+        unselectedIconColor = const Color(0xFFFF69B4).withValues(alpha: 0.4);
+        break;
+      case 'Other':
+        selectedColor = Colors.grey[700]!;
+        unselectedIconColor = Colors.grey[400]!;
+        break;
+      default:
+        selectedColor = AppTheme.primaryBlue;
+        unselectedIconColor = Colors.grey[400]!;
+    }
+
+    // Rainbow border for "Other" option - use same structure as other cards
+    if (gender == 'Other' && isSelected) {
+      return GestureDetector(
+        onTap: () => setState(() => _selectedGender = gender),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFFFF6B6B), // Red
+                Color(0xFFFFD93D), // Yellow
+                Color(0xFF6BCF7F), // Green
+                Color(0xFF4D96FF), // Blue
+                Color(0xFFB565D8), // Purple
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          padding: const EdgeInsets.all(2), // Border width
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: 22,
+            ), // 24 - 2 = 22 to match total height
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 32, color: selectedColor),
+                const SizedBox(height: 12),
+                Text(
+                  gender,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: selectedColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Regular cards for Male, Female, and unselected Other
+    return GestureDetector(
+      onTap: () => setState(() => _selectedGender = gender),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        decoration: BoxDecoration(
+          color: isSelected ? selectedColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? selectedColor : Colors.grey[200]!,
+            width: 2,
+          ),
+          boxShadow: [
+            if (!isSelected)
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
+        ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Progress indicator
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected ? Colors.white : unselectedIconColor,
             ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                      Row(
-                        children: [
-                          const Icon(SolarIconsBold.user, color: AppTheme.primaryBlue, size: 24),
-                          const SizedBox(width: 8),
-                          Text(
-                            _userName.isNotEmpty ? 'Hi $_userName!' : 'Tell us about yourself',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        'Just a few quick questions to personalize your experience',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-                      
-                      Divider(color: Colors.grey[300], thickness: 1),
-
-                      const SizedBox(height: 24),
-
-                      // Age Field
-                      const Text(
-                        'Age',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _ageController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your age',
-                          prefixIcon: Icon(SolarIconsBold.calendar),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Age is required';
-                          }
-                          final age = int.tryParse(value);
-                          if (age == null) {
-                            return 'Please enter a valid number';
-                          }
-                          if (age < 13 || age > 120) {
-                            return 'Age must be between 13 and 120';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Gender Selection
-                      const Text(
-                        'Gender',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ..._genderOptions.map((option) {
-                        final isSelected = _selectedGender == option['value'];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedGender = option['value'] as String;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppTheme.primaryBlue.withOpacity(0.1)
-                                    : Colors.white,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppTheme.primaryBlue
-                                      : Colors.grey.shade300,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    option['icon'] as IconData,
-                                    color: isSelected
-                                        ? AppTheme.primaryBlue
-                                        : Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    option['label'] as String,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                      color: isSelected
-                                          ? AppTheme.primaryBlue
-                                          : Colors.black87,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: AppTheme.primaryBlue,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Next Button
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _handleNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'CONTINUE →',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
+            const SizedBox(height: 12),
+            Text(
+              gender,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.grey[600],
               ),
             ),
           ],
@@ -356,5 +482,4 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
       ),
     );
   }
-
 }

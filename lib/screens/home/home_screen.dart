@@ -19,181 +19,239 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
-      body: Column(
-        children: [
-          PageHeader(
-            title: '${_getGreeting()}, Jim!',
-            subtitle: "Let's make today a great day.",
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 24),
-
-                    // Stats Cards Row
-                    Row(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            PageHeader(
+              title: '${_getGreeting()}, Jim!',
+              subtitle: "Let's make today a great day.",
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Streak Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'Steps',
-                            '6504',
-                            Icons.directions_walk,
-                            theme.colorScheme.primary,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '5-Day Streak',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "You're on fire! Keep the momentum going.",
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.blue.shade900.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            context,
-                            'Calories',
-                            '6504',
-                            Icons.local_fire_department,
-                            Colors.orange,
-                          ),
+                        Icon(
+                          SolarIconsBold.flame,
+                          color: Colors.blue.shade500,
+                          size: 32,
                         ),
                       ],
                     ),
+                  ),
 
-                    const SizedBox(height: 12),
+                  const SizedBox(height: 24),
 
-                    // Minutes Card
-                    _buildStatCard(
+                  // Stats Cards Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Steps',
+                          '6504',
+                          SolarIconsBold.walking,
+                          Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          context,
+                          'Calories',
+                          '320',
+                          SolarIconsBold.flame,
+                          Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Minutes Card
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildStatCard(
                       context,
                       'Minutes',
                       '45',
-                      Icons.timer,
-                      theme.colorScheme.tertiary,
+                      SolarIconsBold.stopwatch,
+                      Colors.blueGrey,
                     ),
+                  ),
 
-                    const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                    // Streak Card
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(16),
+                  // Quick Track Section
+                  Text(
+                    'Quick Track',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Quick Track Grid
+                  GridView.count(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.3,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          // Track Workout
+                        },
+                        child: _buildQuickTrackCard(
+                          context,
+                          'Track Workout',
+                          'Start a new session',
+                          SolarIconsBold.dumbbell,
+                          Colors.blue,
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              '🔥',
-                              style: TextStyle(fontSize: 32),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '5-Day Streak',
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "You're on fire!\nKeep the momentum going.",
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      GestureDetector(
+                        onTap: () {
+                          // Log Water
+                        },
+                        child: _buildQuickTrackCard(
+                          context,
+                          'Log Water',
+                          'Stay Hydrated',
+                          SolarIconsBold.waterdrops,
+                          Colors.cyan,
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Quick Track Section
-                    Text(
-                      'Quick Track',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: () {
+                          // Add Meal
+                        },
+                        child: _buildQuickTrackCard(
+                          context,
+                          'Add Meal',
+                          'Record your intake',
+                          SolarIconsBold.chefHat,
+                          Colors.orange,
+                        ),
                       ),
-                    ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, "/mission");
+                        },
+                        child: _buildQuickTrackCard(
+                          context,
+                          'Log Sleep',
+                          'Track your rest',
+                          SolarIconsBold.moonSleep,
+                          Colors.indigo,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/trackertest');
+                        },
+                        child: _buildQuickTrackCard(
+                          context,
+                          'AI Activity',
+                          'Track with AI',
+                          SolarIconsBold.magicStick,
+                          Colors.purple,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/phone_heart_rate');
+                        },
+                        child: _buildQuickTrackCard(
+                          context,
+                          'Heart Rate',
+                          'Live monitoring',
+                          SolarIconsBold.heartPulse,
+                          Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
-                    // Quick Track Grid (2x2)
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, '/phone_heart_rate');
-                          },
-                          child: _buildQuickTrackCard(
-                            context,
-                            'Heart Rate',
-                            'Live monitoring',
-                            SolarIconsBold.heartPulse,
-                            Colors.red,
-                          ),
+                  // Suggested Element: Recent Activity
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Activity',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, '/trackertest');
-                          },
-                          child: _buildQuickTrackCard(
-                            context,
-                            'AI Activity',
-                            'Track with AI',
-                            SolarIconsBold.cpu,
-                            Colors.deepPurple,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            // Add Meal
-                          },
-                          child: _buildQuickTrackCard(
-                            context,
-                            'Add Meal',
-                            'Record your intake',
-                            SolarIconsBold.hamburgerMenu,
-                            Colors.orange,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(context, "/mission");
-                          },
-                          child: _buildQuickTrackCard(
-                            context,
-                            'Log Sleep',
-                            'Track your rest',
-                            SolarIconsBold.moon,
-                            Colors.purple,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('See All'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildRecentActivityItem(
+                    context,
+                    'Morning Run',
+                    '5.2 km • 32 min',
+                    'Today, 7:00 AM',
+                    SolarIconsBold.running,
+                    Colors.orange,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildRecentActivityItem(
+                    context,
+                    'Upper Body',
+                    '45 min • 320 kcal',
+                    'Yesterday, 6:30 PM',
+                    SolarIconsBold.dumbbell,
+                    Colors.blue,
+                  ),
 
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -294,6 +352,71 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             subtitle,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityItem(
+    BuildContext context,
+    String title,
+    String subtitle,
+    String time,
+    IconData icon,
+    Color color,
+  ) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

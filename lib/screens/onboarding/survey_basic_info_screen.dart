@@ -4,6 +4,7 @@ import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
 import '../../widgets/survey_app_bar.dart';
+import '../../core/utils/logger.dart';
 
 class SurveyBasicInfoScreen extends ConsumerStatefulWidget {
   const SurveyBasicInfoScreen({super.key});
@@ -15,48 +16,111 @@ class SurveyBasicInfoScreen extends ConsumerStatefulWidget {
 
 class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   String? _selectedGender;
-  String _userName = '';
+  bool _isEditMode = false;
+  final _logger = Logger('SurveyBasicInfoScreen');
 
   @override
   void initState() {
     super.initState();
     // Get user name from arguments (passed from signup)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      final name = args?['name'] as String?;
-      if (name != null && name.isNotEmpty) {
-        setState(() {
-          _userName = name;
-        });
-        // Save to survey data
-        ref
-            .read(surveyNotifierProvider.notifier)
-            .updateSurveyData('fullName', name);
-      }
+      _loadExistingData();
+    });
+  }
+
+  /// Load existing data from profile or survey state
+  /// Requirement 7.3: Ensure survey screens reflect profile data if returning
+  Future<void> _loadExistingData() async {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final name = args?['name'] as String?;
+    final userId = args?['userId'] as String?;
+    final fromEdit = args?['fromEdit'] as bool? ?? false;
+
+    setState(() {
+      _isEditMode = fromEdit;
     });
 
-    // Load existing data if available or set default
+    // First, try to load from existing profile if user is returning
+    if (userId != null) {
+      final profileAsync = ref.read(profileNotifierProvider(userId));
+      final profile = profileAsync.valueOrNull;
+
+      if (profile != null) {
+        // User has existing profile data - pre-populate from profile
+        if (profile.fullName != null) {
+          _nameController.text = profile.fullName!;
+        }
+        if (profile.age != null) {
+          _ageController.text = profile.age.toString();
+        }
+        if (profile.gender != null) {
+          setState(() {
+            _selectedGender = profile.gender;
+          });
+        }
+        // Update survey state with profile data
+        if (profile.fullName != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('fullName', profile.fullName);
+        }
+        if (profile.age != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('age', profile.age);
+        }
+        if (profile.gender != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('gender', profile.gender);
+        }
+        return;
+      }
+    }
+
+    // If no profile data, load from survey state or use defaults
     final surveyState = ref.read(surveyNotifierProvider);
+
+    // Set name from signup if provided
+    if (name != null && name.isNotEmpty) {
+      ref
+          .read(surveyNotifierProvider.notifier)
+          .updateSurveyData('fullName', name);
+    }
+
+    // Load age from survey state or default
     final age = surveyState.surveyData['age'];
     if (age != null) {
       _ageController.text = age.toString();
     } else {
       _ageController.text = '18'; // Default age
     }
+
+    // Load gender from survey state
     _selectedGender = surveyState.surveyData['gender'] as String?;
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _nameController.dispose();
     _ageController.dispose();
     super.dispose();
   }
 
-  bool get _canContinue =>
-      _selectedGender != null && _ageController.text.isNotEmpty;
+  bool get _canContinue {
+    // In edit mode, name is also required
+    if (_isEditMode) {
+      return _selectedGender != null &&
+          _ageController.text.isNotEmpty &&
+          _nameController.text.isNotEmpty;
+    }
+    return _selectedGender != null && _ageController.text.isNotEmpty;
+  }
 
   void _incrementAge() {
     final currentAge = int.tryParse(_ageController.text) ?? 0;
@@ -93,6 +157,11 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
 
   Future<void> _handleNext() async {
     if (_formKey.currentState!.validate()) {
+      // Capture context-dependent values BEFORE any async operations
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final userId = args?['userId'] as String?;
+
       if (_selectedGender == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -105,6 +174,15 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
 
       // Save data to survey notifier
       final surveyNotifier = ref.read(surveyNotifierProvider.notifier);
+
+      // Save name if in edit mode
+      if (_isEditMode && _nameController.text.isNotEmpty) {
+        await surveyNotifier.updateSurveyData(
+          'fullName',
+          _nameController.text.trim(),
+        );
+      }
+
       await surveyNotifier.updateSurveyData(
         'age',
         int.parse(_ageController.text),
@@ -125,16 +203,38 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
         return;
       }
 
-      // Navigate to next screen
-      if (mounted) {
-        final args =
-            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-        Navigator.pushNamed(
-          context,
-          '/survey_body_measurements',
-          arguments: args,
-        );
+      // Incremental save: Save partial profile data to local storage
+      // This ensures data persists if user navigates away
+      // Requirement 1.1, 1.2: Save data locally on each step
+      if (userId != null) {
+        try {
+          final handler = await ref.read(
+            surveyCompletionHandlerProvider.future,
+          );
+          final surveyData = ref.read(surveyNotifierProvider).surveyData;
+
+          // Save partial profile data incrementally
+          // This won't clear survey state, just persists to profile storage
+          await handler.completeSurvey(userId, surveyData);
+          _logger.info('Incremental save successful for basic info');
+        } catch (e, stackTrace) {
+          // Log error but don't block user from continuing
+          // Incremental save is best-effort
+          _logger.warning(
+            'Incremental save failed for basic info',
+            error: e,
+            stackTrace: stackTrace,
+          );
+        }
       }
+
+      // Navigate to next screen
+      if (!mounted) return;
+      Navigator.pushNamed(
+        context,
+        '/survey_body_measurements',
+        arguments: args,
+      );
     }
   }
 
@@ -182,6 +282,56 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
                         ),
 
                         const SizedBox(height: 40),
+
+                        // Name field (only in edit mode)
+                        if (_isEditMode) ...[
+                          Text(
+                            'Full Name',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF314158),
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _nameController,
+                            style: const TextStyle(
+                              color: AppTheme.text,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Enter your full name',
+                              hintStyle: TextStyle(color: Colors.grey[500]),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryBlue,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 20,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (_isEditMode &&
+                                  (value == null || value.trim().isEmpty)) {
+                                return 'Please enter your name';
+                              }
+                              return null;
+                            },
+                            onChanged: (value) => setState(() {}),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
 
                         // Gender Selection
                         Text(
@@ -376,7 +526,9 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
   }
 
   Widget _buildGenderCard(String gender, IconData icon) {
-    final isSelected = _selectedGender == gender;
+    // Store lowercase value for validation, but display capitalized
+    final genderValue = gender.toLowerCase();
+    final isSelected = _selectedGender == genderValue;
 
     // Define colors based on gender
     Color selectedColor;
@@ -403,7 +555,7 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
     // Rainbow border for "Other" option - use same structure as other cards
     if (gender == 'Other' && isSelected) {
       return GestureDetector(
-        onTap: () => setState(() => _selectedGender = gender),
+        onTap: () => setState(() => _selectedGender = genderValue),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
@@ -451,7 +603,7 @@ class _SurveyBasicInfoScreenState extends ConsumerState<SurveyBasicInfoScreen> {
 
     // Regular cards for Male, Female, and unselected Other
     return GestureDetector(
-      onTap: () => setState(() => _selectedGender = gender),
+      onTap: () => setState(() => _selectedGender = genderValue),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 24),

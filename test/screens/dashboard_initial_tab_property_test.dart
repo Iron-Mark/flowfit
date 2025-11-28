@@ -1,0 +1,397 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowfit/screens/dashboard_screen.dart';
+import 'package:flowfit/presentation/providers/providers.dart';
+import 'package:flowfit/domain/entities/auth_state.dart';
+import 'package:flowfit/domain/entities/user.dart';
+import 'package:flowfit/presentation/notifiers/auth_notifier.dart';
+import 'package:flowfit/domain/repositories/i_auth_repository.dart';
+
+void main() {
+  group('DashboardScreen Initial Tab Navigation - Property Test', () {
+    /// **Feature: dashboard-refactoring-merge, Property 2: Initial tab navigation from route arguments**
+    /// **Validates: Requirements 2.1**
+    ///
+    /// Property: For any valid initialTab parameter in route arguments,
+    /// the dashboard should set its current index to that value.
+    ///
+    /// This property-based test verifies the behavior by checking the selected
+    /// tab indicator in the BottomNavigationBar for all valid indices (0-4).
+    testWidgets(
+      'Property 2: For any valid initialTab (0-4), dashboard displays correct tab',
+      (WidgetTester tester) async {
+        // Property-based test: Test all valid tab indices (0-4)
+        // This simulates "for any valid tab index" by testing each value
+        final validTabIndices = [0, 1, 2, 3, 4];
+        final tabLabels = ['Home', 'Health', 'Track', 'Progress', 'Profile'];
+
+        for (int i = 0; i < validTabIndices.length; i++) {
+          final tabIndex = validTabIndices[i];
+          final expectedLabel = tabLabels[i];
+
+          // Arrange: Create authenticated state
+          final mockUser = User(
+            id: 'test-user-$tabIndex',
+            email: 'test$tabIndex@example.com',
+            fullName: 'Test User $tabIndex',
+            createdAt: DateTime.now(),
+          );
+
+          // Set the mock user so TestAuthRepository.getCurrentUser() returns it
+          TestAuthRepository.setMockUser(mockUser);
+
+          // Create a test notifier that's already authenticated
+          final testNotifier = TestAuthNotifier(
+            AuthState.authenticated(mockUser),
+          );
+
+          final container = ProviderContainer(
+            overrides: [
+              authNotifierProvider.overrideWith((ref) => testNotifier),
+            ],
+          );
+
+          // Act: Build app with dashboard as initial route with arguments
+          await tester.pumpWidget(
+            UncontrolledProviderScope(
+              container: container,
+              child: MaterialApp(
+                initialRoute: '/dashboard',
+                onGenerateRoute: (settings) {
+                  if (settings.name == '/dashboard') {
+                    return MaterialPageRoute(
+                      builder: (context) => const DashboardScreen(),
+                      settings: RouteSettings(
+                        name: '/dashboard',
+                        arguments: {'initialTab': tabIndex},
+                      ),
+                    );
+                  }
+                  if (settings.name == '/welcome') {
+                    return MaterialPageRoute(
+                      builder: (context) =>
+                          const Scaffold(body: Text('Welcome')),
+                    );
+                  }
+                  return null;
+                },
+              ),
+            ),
+          );
+
+          // Wait for widget to build and settle
+          await tester.pumpAndSettle();
+
+          // Debug: Check what widgets are actually rendered
+          final scaffoldFinder = find.byType(Scaffold);
+          if (scaffoldFinder.evaluate().isEmpty) {
+            fail('No Scaffold found in widget tree');
+          }
+
+          // Check if we were redirected to welcome screen
+          final welcomeTextFinder = find.text('Welcome');
+          if (welcomeTextFinder.evaluate().isNotEmpty) {
+            fail('Dashboard redirected to Welcome screen - auth state issue');
+          }
+
+          // Assert: Verify the correct tab is selected by checking BottomNavigationBar
+          final bottomNavBarFinder = find.byType(BottomNavigationBar);
+          if (bottomNavBarFinder.evaluate().isEmpty) {
+            // Print widget tree for debugging
+            debugPrint(
+              'Widget tree: ${tester.allWidgets.map((w) => w.runtimeType).toList()}',
+            );
+            fail('BottomNavigationBar not found in widget tree');
+          }
+
+          final bottomNavBar = tester.widget<BottomNavigationBar>(
+            bottomNavBarFinder,
+          );
+
+          expect(
+            bottomNavBar.currentIndex,
+            equals(tabIndex),
+            reason:
+                'For initialTab=$tabIndex, currentIndex should be $tabIndex',
+          );
+
+          // Additional verification: Check that the correct tab label is highlighted
+          // The selected item should have the primary color
+          final selectedItem = bottomNavBar.items[tabIndex];
+          expect(
+            selectedItem.label,
+            equals(expectedLabel),
+            reason: 'Tab at index $tabIndex should be $expectedLabel',
+          );
+
+          // Clean up
+          container.dispose();
+          await tester.pumpWidget(Container());
+          await tester.pumpAndSettle();
+        }
+      },
+    );
+
+    testWidgets('Property 2: Null initialTab defaults to tab 0 (Home)', (
+      WidgetTester tester,
+    ) async {
+      // Arrange
+      final mockUser = User(
+        id: 'test-user-null',
+        email: 'test@example.com',
+        fullName: 'Test User',
+        createdAt: DateTime.now(),
+      );
+
+      TestAuthRepository.setMockUser(mockUser);
+
+      final container = ProviderContainer(
+        overrides: [
+          authNotifierProvider.overrideWith((ref) {
+            return TestAuthNotifier(AuthState.authenticated(mockUser));
+          }),
+        ],
+      );
+
+      // Act: Build without initialTab argument
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            initialRoute: '/dashboard',
+            onGenerateRoute: (settings) {
+              if (settings.name == '/dashboard') {
+                return MaterialPageRoute(
+                  builder: (context) => const DashboardScreen(),
+                  // No arguments - initialTab will be null
+                );
+              }
+              if (settings.name == '/welcome') {
+                return MaterialPageRoute(
+                  builder: (context) => const Scaffold(body: Text('Welcome')),
+                );
+              }
+              return null;
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Assert: Should default to tab 0
+      final bottomNavBar = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
+
+      expect(
+        bottomNavBar.currentIndex,
+        equals(0),
+        reason: 'When initialTab is null, currentIndex should default to 0',
+      );
+
+      container.dispose();
+    });
+
+    testWidgets('Property 2: Invalid initialTab (negative) defaults to tab 0', (
+      WidgetTester tester,
+    ) async {
+      // Test multiple invalid negative values
+      final invalidIndices = [-1, -5, -100];
+
+      for (final tabIndex in invalidIndices) {
+        // Arrange
+        final mockUser = User(
+          id: 'test-user-$tabIndex',
+          email: 'test@example.com',
+          fullName: 'Test User',
+          createdAt: DateTime.now(),
+        );
+
+        TestAuthRepository.setMockUser(mockUser);
+
+        final container = ProviderContainer(
+          overrides: [
+            authNotifierProvider.overrideWith((ref) {
+              return TestAuthNotifier(AuthState.authenticated(mockUser));
+            }),
+          ],
+        );
+
+        // Act
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              initialRoute: '/dashboard',
+              onGenerateRoute: (settings) {
+                if (settings.name == '/dashboard') {
+                  return MaterialPageRoute(
+                    builder: (context) => const DashboardScreen(),
+                    settings: RouteSettings(
+                      name: '/dashboard',
+                      arguments: {'initialTab': tabIndex},
+                    ),
+                  );
+                }
+                if (settings.name == '/welcome') {
+                  return MaterialPageRoute(
+                    builder: (context) => const Scaffold(body: Text('Welcome')),
+                  );
+                }
+                return null;
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Assert: Should remain at 0 for invalid indices
+        final bottomNavBar = tester.widget<BottomNavigationBar>(
+          find.byType(BottomNavigationBar),
+        );
+
+        expect(
+          bottomNavBar.currentIndex,
+          equals(0),
+          reason:
+              'For invalid initialTab=$tabIndex, currentIndex should remain 0',
+        );
+
+        // Clean up
+        container.dispose();
+        await tester.pumpWidget(Container());
+        await tester.pumpAndSettle();
+      }
+    });
+
+    testWidgets('Property 2: Invalid initialTab (> 4) defaults to tab 0', (
+      WidgetTester tester,
+    ) async {
+      // Test multiple invalid values greater than max
+      final invalidIndices = [5, 10, 100];
+
+      for (final tabIndex in invalidIndices) {
+        // Arrange
+        final mockUser = User(
+          id: 'test-user-$tabIndex',
+          email: 'test@example.com',
+          fullName: 'Test User',
+          createdAt: DateTime.now(),
+        );
+
+        TestAuthRepository.setMockUser(mockUser);
+
+        final container = ProviderContainer(
+          overrides: [
+            authNotifierProvider.overrideWith((ref) {
+              return TestAuthNotifier(AuthState.authenticated(mockUser));
+            }),
+          ],
+        );
+
+        // Act
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              initialRoute: '/dashboard',
+              onGenerateRoute: (settings) {
+                if (settings.name == '/dashboard') {
+                  return MaterialPageRoute(
+                    builder: (context) => const DashboardScreen(),
+                    settings: RouteSettings(
+                      name: '/dashboard',
+                      arguments: {'initialTab': tabIndex},
+                    ),
+                  );
+                }
+                if (settings.name == '/welcome') {
+                  return MaterialPageRoute(
+                    builder: (context) => const Scaffold(body: Text('Welcome')),
+                  );
+                }
+                return null;
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // Assert: Should remain at 0 for invalid indices
+        final bottomNavBar = tester.widget<BottomNavigationBar>(
+          find.byType(BottomNavigationBar),
+        );
+
+        expect(
+          bottomNavBar.currentIndex,
+          equals(0),
+          reason:
+              'For invalid initialTab=$tabIndex, currentIndex should remain 0',
+        );
+
+        // Clean up
+        container.dispose();
+        await tester.pumpWidget(Container());
+        await tester.pumpAndSettle();
+      }
+    });
+  });
+}
+
+/// Test implementation of AuthNotifier for testing purposes
+/// This notifier starts with a pre-set authenticated state and doesn't
+/// call the async _init() method that would override it.
+class TestAuthNotifier extends AuthNotifier {
+  final AuthState _initialState;
+
+  TestAuthNotifier(this._initialState) : super(TestAuthRepository()) {
+    // Set the state immediately after construction
+    // This happens after the parent constructor but before any async init
+    state = _initialState;
+  }
+
+  @override
+  Future<void> initialize() async {
+    // Override to prevent the async _init() from changing our test state
+    // Keep the state we set in the constructor
+  }
+}
+
+/// Test implementation of IAuthRepository for testing purposes
+class TestAuthRepository implements IAuthRepository {
+  static User? _mockUser;
+
+  static void setMockUser(User? user) {
+    _mockUser = user;
+  }
+
+  @override
+  Future<User?> getCurrentUser() async => _mockUser;
+
+  @override
+  Future<User> signIn({required String email, required String password}) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> signOut() async {}
+
+  @override
+  Future<User> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+    Map<String, dynamic>? metadata,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<User?> authStateChanges() {
+    return Stream.value(null);
+  }
+}

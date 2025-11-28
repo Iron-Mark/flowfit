@@ -15,6 +15,12 @@ class UserProfileModel {
   final bool surveyCompleted;
   final String createdAt;
   final String updatedAt;
+  final String? heightUnit;
+  final String? weightUnit;
+  final int? dailyStepsTarget;
+  final int? dailyActiveMinutesTarget;
+  final double? dailyWaterTarget;
+  final String? profileImageUrl;
 
   const UserProfileModel({
     required this.userId,
@@ -29,6 +35,12 @@ class UserProfileModel {
     required this.surveyCompleted,
     required this.createdAt,
     required this.updatedAt,
+    this.heightUnit,
+    this.weightUnit,
+    this.dailyStepsTarget,
+    this.dailyActiveMinutesTarget,
+    this.dailyWaterTarget,
+    this.profileImageUrl,
   });
 
   /// Creates a UserProfileModel from JSON data received from Supabase.
@@ -46,6 +58,14 @@ class UserProfileModel {
       surveyCompleted: json['survey_completed'] as bool,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
+      heightUnit: json['height_unit'] as String?,
+      weightUnit: json['weight_unit'] as String?,
+      dailyStepsTarget: json['daily_steps_target'] as int?,
+      dailyActiveMinutesTarget: json['daily_active_minutes_target'] as int?,
+      dailyWaterTarget: json['daily_water_target'] != null
+          ? (json['daily_water_target'] as num).toDouble()
+          : null,
+      profileImageUrl: json['profile_image_url'] as String?,
     );
   }
 
@@ -64,6 +84,12 @@ class UserProfileModel {
       'survey_completed': surveyCompleted,
       'created_at': createdAt,
       'updated_at': updatedAt,
+      'height_unit': heightUnit,
+      'weight_unit': weightUnit,
+      'daily_steps_target': dailyStepsTarget,
+      'daily_active_minutes_target': dailyActiveMinutesTarget,
+      'daily_water_target': dailyWaterTarget,
+      'profile_image_url': profileImageUrl,
     };
   }
 
@@ -80,6 +106,12 @@ class UserProfileModel {
       goals: goals,
       dailyCalorieTarget: dailyCalorieTarget,
       surveyCompleted: surveyCompleted,
+      heightUnit: heightUnit,
+      weightUnit: weightUnit,
+      dailyStepsTarget: dailyStepsTarget,
+      dailyActiveMinutesTarget: dailyActiveMinutesTarget,
+      dailyWaterTarget: dailyWaterTarget,
+      profileImageUrl: profileImageUrl,
     );
   }
 
@@ -100,6 +132,12 @@ class UserProfileModel {
       surveyCompleted: profile.surveyCompleted,
       createdAt: now,
       updatedAt: now,
+      heightUnit: profile.heightUnit,
+      weightUnit: profile.weightUnit,
+      dailyStepsTarget: profile.dailyStepsTarget,
+      dailyActiveMinutesTarget: profile.dailyActiveMinutesTarget,
+      dailyWaterTarget: profile.dailyWaterTarget,
+      profileImageUrl: profile.profileImageUrl,
     );
   }
 }

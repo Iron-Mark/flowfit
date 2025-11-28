@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
+import '../../presentation/providers/profile_providers.dart'
+    as profile_providers;
 import '../../widgets/survey_app_bar.dart';
+import '../../core/domain/entities/user_profile.dart';
 
 class SurveyDailyTargetsScreen extends ConsumerStatefulWidget {
   const SurveyDailyTargetsScreen({super.key});
@@ -28,6 +31,77 @@ class _SurveyDailyTargetsScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExistingData();
+    });
+  }
+
+  /// Load existing data from profile or survey state
+  /// Requirement 7.3: Ensure survey screens reflect profile data if returning
+  Future<void> _loadExistingData() async {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final userId = args?['userId'] as String?;
+
+    // First, try to load from existing profile if user is returning
+    if (userId != null) {
+      final profileAsync = ref.read(profileNotifierProvider(userId));
+      final profile = profileAsync.valueOrNull;
+
+      if (profile != null) {
+        // User has existing profile data - pre-populate from profile
+        if (profile.dailyCalorieTarget != null) {
+          setState(() {
+            _targetCalories = profile.dailyCalorieTarget!;
+          });
+        }
+        if (profile.dailyStepsTarget != null) {
+          setState(() {
+            _targetSteps = profile.dailyStepsTarget!;
+          });
+        }
+        if (profile.dailyActiveMinutesTarget != null) {
+          setState(() {
+            _targetActiveMinutes = profile.dailyActiveMinutesTarget!;
+          });
+        }
+        if (profile.dailyWaterTarget != null) {
+          setState(() {
+            _targetWaterLiters = profile.dailyWaterTarget!;
+          });
+        }
+        // Update survey state with profile data
+        if (profile.dailyCalorieTarget != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData(
+                'dailyCalorieTarget',
+                profile.dailyCalorieTarget,
+              );
+        }
+        if (profile.dailyStepsTarget != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('dailyStepsTarget', profile.dailyStepsTarget);
+        }
+        if (profile.dailyActiveMinutesTarget != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData(
+                'dailyActiveMinutesTarget',
+                profile.dailyActiveMinutesTarget,
+              );
+        }
+        if (profile.dailyWaterTarget != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('dailyWaterTarget', profile.dailyWaterTarget);
+        }
+        return;
+      }
+    }
+
+    // If no profile data, calculate from survey data
     _calculateCalorieTarget();
   }
 
@@ -126,42 +200,118 @@ class _SurveyDailyTargetsScreenState
         throw Exception('User ID not found');
       }
 
-      // Submit survey to backend
-      final success = await surveyNotifier.submitSurvey(userId);
+      // Get survey data
+      final surveyData = ref.read(surveyNotifierProvider).surveyData;
+
+      // Try to save using handler, but fallback to local-only save if it fails
+      bool savedSuccessfully = false;
+      String? errorDetails;
+
+      try {
+        // Get survey completion handler
+        final handler = await ref.read(
+          profile_providers.surveyCompletionHandlerProvider.future,
+        );
+
+        // Complete survey using handler
+        savedSuccessfully = await handler.completeSurvey(userId, surveyData);
+      } catch (handlerError) {
+        // Handler failed - try direct local save as fallback
+        errorDetails = handlerError.toString();
+        try {
+          final repository = await ref.read(
+            profile_providers.profileRepositoryProvider.future,
+          );
+          final profile = UserProfile.fromSurveyData(userId, surveyData);
+          await repository.saveLocalProfile(profile);
+          savedSuccessfully = true;
+        } catch (fallbackError) {
+          // Both handler and fallback failed
+          savedSuccessfully = false;
+          errorDetails = 'Handler: $handlerError, Fallback: $fallbackError';
+        }
+      }
 
       if (!mounted) return;
 
-      if (success) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Profile saved successfully!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+      if (savedSuccessfully) {
+        // Clear survey state after successful save
+        await surveyNotifier.resetSurvey();
 
-        // Navigate to dashboard
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Profile saved successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+
+        // Navigate based on context
+        // If user came from profile edit (not from intro), go to profile tab
+        // If new user from intro, go to home tab
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/dashboard');
+            // Check if user came from intro screen or from edit profile
+            final isFromEdit = args?['fromEdit'] as bool? ?? false;
+
+            if (isFromEdit) {
+              // Trigger profile refresh before navigating back
+              ref.invalidate(profileNotifierProvider(userId));
+
+              // Also manually trigger a reload
+              ref.read(profileNotifierProvider(userId).notifier).loadProfile();
+
+              // Pop back to dashboard
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            } else {
+              // New user - navigate to dashboard and clear all previous routes
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/dashboard', (route) => false);
+            }
           }
         });
       } else {
-        // Show error
-        final errorMessage =
-            ref.read(surveyNotifierProvider).errorMessage ??
-            'Failed to save profile';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
+        // Show error with details
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to save profile. ${errorDetails ?? 'Please try again.'}',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
+        // Show user-friendly error message
+        String errorMessage = 'Failed to save profile. Please try again.';
+
+        // Provide more specific error messages for common cases
+        if (e.toString().contains('network') ||
+            e.toString().contains('connection')) {
+          errorMessage =
+              'No internet connection. Your profile is saved locally and will sync when online.';
+        } else if (e.toString().contains('timeout')) {
+          errorMessage = 'Request timed out. Your profile is saved locally.';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _handleComplete,
+            ),
           ),
         );
       }
@@ -228,7 +378,7 @@ class _SurveyDailyTargetsScreenState
     final weight = surveyData['weight'] as double? ?? 0.0;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: SurveyAppBar(
+      appBar: const SurveyAppBar(
         currentStep: 4,
         totalSteps: 4,
         title: 'Your Daily Targets',
@@ -368,36 +518,82 @@ class _SurveyDailyTargetsScreenState
                 child: Column(
                   children: [
                     Text(
-                      '$_targetCalories calories',
+                      '$_targetCalories',
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 48,
                         fontWeight: FontWeight.bold,
                         color: Colors.orange,
+                        height: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 4),
                     Text(
-                      'Based on: $age${gender == 'male'
-                          ? 'M'
-                          : gender == 'female'
-                          ? 'F'
-                          : ''}, ${height.toStringAsFixed(0)}cm, ${weight.toStringAsFixed(0)}kg',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                    ),
-                    Text(
-                      '${_getActivityLevelDisplay()} • Goals: ${_getGoalsDisplay()}',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      'calories per day',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        _showCalorieAdjustDialog();
-                      },
-                      icon: const Icon(Icons.tune, size: 18),
-                      label: const Text('Adjust'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.orange,
-                        side: const BorderSide(color: Colors.orange),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Based on your profile',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '$age years • ${gender == 'male'
+                                ? 'Male'
+                                : gender == 'female'
+                                ? 'Female'
+                                : 'Other'}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          Text(
+                            '${height.toStringAsFixed(0)}cm • ${weight.toStringAsFixed(0)}kg',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getActivityLevelDisplay(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          if (_getGoalsDisplay() != 'No goals selected') ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              _getGoalsDisplay(),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
@@ -483,31 +679,7 @@ class _SurveyDailyTargetsScreenState
                 ],
               ),
 
-              const SizedBox(height: 32),
-
-              Divider(color: Colors.grey[300], thickness: 1),
-
-              const SizedBox(height: 24),
-
-              // Progress dots
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(4, (index) {
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: index == 3
-                          ? AppTheme.primaryBlue
-                          : Colors.grey[300],
-                      shape: BoxShape.circle,
-                    ),
-                  );
-                }),
-              ),
-
-              const SizedBox(height: 32),
+              const SizedBox(height: 12),
 
               // Complete Button
               SizedBox(
@@ -537,17 +709,18 @@ class _SurveyDailyTargetsScreenState
                             Icon(Icons.check_circle, size: 24),
                             SizedBox(width: 12),
                             Text(
-                              'COMPLETE & START APP',
+                              'Complete & Start App',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
                               ),
                             ),
                           ],
                         ),
                 ),
               ),
+
+              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -764,67 +937,6 @@ class _SurveyDailyTargetsScreenState
           ],
         ),
       ],
-    );
-  }
-
-  void _showCalorieAdjustDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        int tempCalories = _targetCalories;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Adjust Calorie Target'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$tempCalories calories',
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Slider(
-                    value: tempCalories.toDouble(),
-                    min: 1200,
-                    max: 4000,
-                    divisions: 56,
-                    activeColor: Colors.orange,
-                    label: '$tempCalories',
-                    onChanged: (value) {
-                      setDialogState(() {
-                        tempCalories = value.round();
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _targetCalories = tempCalories;
-                    });
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                  ),
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

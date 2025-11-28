@@ -25,12 +25,14 @@ Dashboard
 ## What Changed
 
 ### ✅ Fixed Issues:
+
 1. **Removed duplicate name field** - Name is now only asked once during signup
 2. **Added email verification step** - Proper flow with verification screen
 3. **Improved data flow** - User data (name, email) passed through all screens
 4. **Better UX** - Personalized greetings using the user's name
 
 ### ✅ New Email Verification Screen Features:
+
 - Clean, professional UI matching app theme
 - Shows user's email address
 - Clear step-by-step instructions
@@ -45,7 +47,9 @@ Dashboard
 ## Screen Details
 
 ### 1. Sign Up Screen (`/signup`)
+
 **Collects**:
+
 - Full Name ✅
 - Email ✅
 - Password ✅
@@ -55,6 +59,7 @@ Dashboard
 - Marketing opt-in (optional) ✅
 
 **On Submit**:
+
 - Validates all fields
 - Creates user account (Supabase ready)
 - Sends verification email
@@ -64,11 +69,14 @@ Dashboard
 ---
 
 ### 2. Email Verification Screen (`/email_verification`) **NEW**
+
 **Receives**:
+
 - `name` - User's full name
 - `email` - User's email address
 
 **Features**:
+
 - Displays user's email
 - Auto-checks verification every 3 seconds
 - Manual check button
@@ -76,11 +84,13 @@ Dashboard
 - Skip button (for testing)
 
 **On Verification Success**:
+
 - Shows success message
 - Navigates to Survey Intro
 - Passes: `{ name, email }`
 
 **Supabase Integration Points**:
+
 ```dart
 // Check verification status
 final user = Supabase.instance.client.auth.currentUser;
@@ -97,72 +107,91 @@ await Supabase.instance.client.auth.resend(
 ---
 
 ### 3. Survey Intro Screen (`/survey_intro`)
+
 **Receives**:
+
 - `name` - User's full name
 - `email` - User's email address
 
 **Shows**:
+
 - Personalized greeting: "Let's personalize FlowFit for you, [Name]!"
 - Quick setup overview (2 minutes)
 - 4 survey steps preview
 - Skip option
 
 **On Continue**:
+
 - Navigates to Survey Basic Info
 - Passes: `{ name, email }`
 
 ---
 
 ### 4. Survey: Basic Info (`/survey_basic_info`)
+
 **Receives**:
+
 - `name` - User's full name (from signup)
 - `email` - User's email address
 
 **Shows**:
+
 - Personalized title: "Hi [Name]! Tell us about yourself"
 - ~~First Name field~~ **REMOVED** ✅
 - Birthday picker
 - Biological sex selector (Male/Female/Other)
 
 **Collects**:
+
 - Birthday (for age calculation)
 - Biological sex (for BMR/calorie calculations)
 
 **On Continue**:
+
 - Navigates to Body Measurements
 - Passes all collected data
 
 ---
 
 ### 5. Survey: Body Measurements (`/survey_body_measurements`)
+
 **Collects**:
+
 - Height (cm or ft/in)
 - Weight (kg or lbs)
 - Activity level (Sedentary to Very Active)
 
 **On Continue**:
+
 - Navigates to Activity Goals
 
 ---
 
 ### 6. Survey: Activity Goals (`/survey_activity_goals`)
+
 **Collects**:
+
 - Primary fitness goal
 - Target areas
 - Workout preferences
 
 **On Continue**:
+
 - Navigates to Daily Targets
 
 ---
 
 ### 7. Survey: Daily Targets (`/survey_daily_targets`)
+
 **Collects**:
+
 - Daily calorie target
-- Daily steps goal
-- Daily water intake goal
+- Daily steps target
+- Daily active minutes target
+- Daily water intake target
 
 **On Complete**:
+
 - Saves all survey data
 - Navigates to Dashboard
 
@@ -221,6 +250,7 @@ await Supabase.instance.client.auth.resend(
 │ Daily Targets   │
 │  + calories     │
 │  + steps        │
+│  + active mins  │
 │  + water        │
 └────────┬────────┘
          │ saves to database
@@ -235,6 +265,7 @@ await Supabase.instance.client.auth.resend(
 ## Supabase Integration Checklist
 
 ### Sign Up Screen
+
 ```dart
 // Create user account
 final response = await Supabase.instance.client.auth.signUp(
@@ -252,12 +283,13 @@ final response = await Supabase.instance.client.auth.signUp(
 ```
 
 ### Email Verification Screen
+
 ```dart
 // Auto-check verification status
 Timer.periodic(Duration(seconds: 3), (timer) async {
   final user = Supabase.instance.client.auth.currentUser;
   await user?.reload();
-  
+
   if (user?.emailConfirmedAt != null) {
     // Email verified!
     timer.cancel();
@@ -273,21 +305,28 @@ await Supabase.instance.client.auth.resend(
 ```
 
 ### Survey Screens
+
 ```dart
 // Save survey data to user profile
 await Supabase.instance.client
   .from('user_profiles')
   .upsert({
     'user_id': user.id,
-    'birthday': birthday,
-    'biological_sex': sex,
-    'height_cm': height,
-    'weight_kg': weight,
+    'full_name': fullName,
+    'age': age,
+    'gender': gender,
+    'height': height,
+    'weight': weight,
+    'height_unit': heightUnit,
+    'weight_unit': weightUnit,
     'activity_level': activityLevel,
-    'fitness_goals': goals,
+    'goals': goals,
     'daily_calorie_target': calories,
-    'daily_steps_goal': steps,
-    'daily_water_goal': water,
+    'daily_steps_target': steps,
+    'daily_active_minutes_target': activeMinutes,
+    'daily_water_target': water,
+    'profile_image_url': profileImageUrl,
+    'survey_completed': true,
   });
 ```
 
@@ -296,6 +335,7 @@ await Supabase.instance.client
 ## Database Schema (Supabase)
 
 ### `auth.users` (built-in)
+
 - `id` - UUID (primary key)
 - `email` - Email address
 - `email_confirmed_at` - Timestamp (null until verified)
@@ -306,32 +346,41 @@ await Supabase.instance.client
   - `marketing_opt_in`
 
 ### `public.user_profiles` (custom table)
+
 ```sql
 CREATE TABLE user_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  
+
   -- Basic Info
-  birthday DATE,
-  biological_sex TEXT CHECK (biological_sex IN ('male', 'female', 'other')),
-  
+  full_name TEXT,
+  age INTEGER,
+  gender TEXT,
+
   -- Body Measurements
-  height_cm DECIMAL(5,2),
-  weight_kg DECIMAL(5,2),
+  height DECIMAL(5,2),
+  weight DECIMAL(5,2),
+  height_unit TEXT CHECK (height_unit IN ('cm', 'ft')) DEFAULT 'cm',
+  weight_unit TEXT CHECK (weight_unit IN ('kg', 'lbs')) DEFAULT 'kg',
   activity_level TEXT,
-  
+
   -- Goals
-  fitness_goals JSONB,
-  
+  goals TEXT[],
+
   -- Daily Targets
   daily_calorie_target INTEGER,
-  daily_steps_goal INTEGER,
-  daily_water_goal DECIMAL(4,2),
-  
+  daily_steps_target INTEGER,
+  daily_active_minutes_target INTEGER,
+  daily_water_target DECIMAL(3,1),
+
+  -- Profile
+  profile_image_url TEXT,
+  survey_completed BOOLEAN DEFAULT FALSE,
+
   -- Timestamps
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  
+
   UNIQUE(user_id)
 );
 
@@ -350,6 +399,7 @@ CREATE POLICY "Users can manage own profile"
 ## Testing Flow
 
 ### Manual Testing:
+
 1. Open app → Welcome screen
 2. Tap "Sign Up"
 3. Fill in all fields (name, email, password)
@@ -365,20 +415,15 @@ CREATE POLICY "Users can manage own profile"
 13. Arrive at dashboard
 
 ### With Supabase (Production):
-1-5. Same as above
-6. Email verification screen appears
-7. Check email inbox
-8. Click verification link
-9. Return to app
-10. Tap "I've Verified My Email"
-11. App checks status → Success!
-12. Continue to survey
+
+1-5. Same as above 6. Email verification screen appears 7. Check email inbox 8. Click verification link 9. Return to app 10. Tap "I've Verified My Email" 11. App checks status → Success! 12. Continue to survey
 
 ---
 
 ## UI/UX Improvements
 
 ### Email Verification Screen:
+
 - ✅ Clean, modern design
 - ✅ Clear instructions
 - ✅ Auto-checking (every 3 seconds)
@@ -388,6 +433,7 @@ CREATE POLICY "Users can manage own profile"
 - ✅ Skip option for testing
 
 ### Survey Flow:
+
 - ✅ Personalized greetings
 - ✅ No duplicate fields
 - ✅ Smooth data passing
@@ -396,6 +442,7 @@ CREATE POLICY "Users can manage own profile"
 - ✅ Consistent styling
 
 ### Button Styling:
+
 - ✅ Consistent rounded corners (12px)
 - ✅ Proper elevation/shadows
 - ✅ Loading states
@@ -407,12 +454,14 @@ CREATE POLICY "Users can manage own profile"
 ## Next Steps
 
 ### Immediate:
+
 1. ✅ Email verification screen created
 2. ✅ Duplicate name field removed
 3. ✅ Data flow fixed
 4. ⏳ Test complete flow
 
 ### For Supabase Integration:
+
 1. Set up Supabase project
 2. Configure email templates
 3. Create user_profiles table
@@ -422,6 +471,7 @@ CREATE POLICY "Users can manage own profile"
 7. Configure RLS policies
 
 ### Future Enhancements:
+
 - Social login (Google, Apple)
 - Password reset flow
 - Email change flow

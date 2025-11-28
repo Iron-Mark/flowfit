@@ -7,10 +7,16 @@ import 'health/health_screen.dart';
 import 'track/track_screen.dart';
 import 'progress/progress_screen.dart';
 import 'profile/profile_screen.dart';
+// Keep tab imports for future use
+// ignore: unused_import
 import 'dashboard/home_tab.dart';
+// ignore: unused_import
 import 'dashboard/health_tab.dart';
+// ignore: unused_import
 import 'dashboard/track_tab.dart';
+// ignore: unused_import
 import 'dashboard/progress_tab.dart';
+// ignore: unused_import
 import 'dashboard/profile_tab.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -37,15 +43,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Check auth state on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAuthState();
+      _checkInitialTab();
     });
+  }
+
+  void _checkInitialTab() {
+    // Check if we should navigate to a specific tab
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final initialTab = args?['initialTab'] as int?;
+
+    if (initialTab != null && initialTab >= 0 && initialTab < _screens.length) {
+      setState(() {
+        _currentIndex = initialTab;
+      });
+    }
   }
 
   void _checkAuthState() {
     final authState = ref.read(authNotifierProvider);
 
-    // If not authenticated, redirect to login screen
+    // If not authenticated, redirect to welcome screen
     if (authState.user == null) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/welcome', (route) => false);
     }
   }
 
@@ -53,15 +75,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final authState = ref.watch(authNotifierProvider);
-    
+
     // Listen for auth state changes
     ref.listen(authNotifierProvider, (previous, next) {
-      // If user logs out, redirect to login
+      // If user logs out, redirect to welcome
       if (next.user == null && mounted) {
         Navigator.of(
           context,
-        ).pushNamedAndRemoveUntil('/login', (route) => false);
+        ).pushNamedAndRemoveUntil('/welcome', (route) => false);
       }
     });
 

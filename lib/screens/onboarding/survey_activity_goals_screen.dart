@@ -4,6 +4,7 @@ import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
 import '../../widgets/survey_app_bar.dart';
+import '../../core/utils/logger.dart';
 import 'survey_daily_targets_screen.dart';
 
 class SurveyActivityGoalsScreen extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class _SurveyActivityGoalsScreenState
     extends ConsumerState<SurveyActivityGoalsScreen> {
   String? _selectedActivityLevel;
   Set<String> _selectedGoals = {};
+  final _logger = Logger('SurveyActivityGoalsScreen');
 
   final List<Map<String, dynamic>> _activityLevels = [
     {
@@ -77,19 +79,69 @@ class _SurveyActivityGoalsScreenState
   @override
   void initState() {
     super.initState();
-    // Load existing data if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExistingData();
+    });
+  }
+
+  /// Load existing data from profile or survey state
+  /// Requirement 7.3: Ensure survey screens reflect profile data if returning
+  Future<void> _loadExistingData() async {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final userId = args?['userId'] as String?;
+
+    // First, try to load from existing profile if user is returning
+    if (userId != null) {
+      final profileAsync = ref.read(profileNotifierProvider(userId));
+      final profile = profileAsync.valueOrNull;
+
+      if (profile != null) {
+        // User has existing profile data - pre-populate from profile
+        if (profile.activityLevel != null) {
+          setState(() {
+            _selectedActivityLevel = profile.activityLevel;
+          });
+        }
+        if (profile.goals != null && profile.goals!.isNotEmpty) {
+          setState(() {
+            _selectedGoals = profile.goals!.toSet();
+          });
+        }
+        // Update survey state with profile data
+        if (profile.activityLevel != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('activityLevel', profile.activityLevel);
+        }
+        if (profile.goals != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('goals', profile.goals);
+        }
+        return;
+      }
+    }
+
+    // If no profile data, load from survey state
     final surveyState = ref.read(surveyNotifierProvider);
     _selectedActivityLevel = surveyState.surveyData['activityLevel'] as String?;
     final goals = surveyState.surveyData['goals'] as List<dynamic>?;
     if (goals != null) {
       _selectedGoals = goals.map((e) => e.toString()).toSet();
     }
+    setState(() {});
   }
 
   bool get _canContinue =>
       _selectedActivityLevel != null && _selectedGoals.isNotEmpty;
 
   Future<void> _handleNext() async {
+    // Capture context-dependent values BEFORE any async operations
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final userId = args?['userId'] as String?;
+
     // Validate selections
     if (_selectedActivityLevel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,18 +182,38 @@ class _SurveyActivityGoalsScreenState
       return;
     }
 
-    // Navigate to next screen
-    if (mounted) {
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SurveyDailyTargetsScreen(),
-          settings: RouteSettings(arguments: args),
-        ),
-      );
+    // Incremental save: Save partial profile data to local storage
+    // This ensures data persists if user navigates away
+    // Requirement 1.1, 1.2: Save data locally on each step
+    if (userId != null) {
+      try {
+        final handler = await ref.read(surveyCompletionHandlerProvider.future);
+        final surveyData = ref.read(surveyNotifierProvider).surveyData;
+
+        // Save partial profile data incrementally
+        // This won't clear survey state, just persists to profile storage
+        await handler.completeSurvey(userId, surveyData);
+        _logger.info('Incremental save successful for activity goals');
+      } catch (e, stackTrace) {
+        // Log error but don't block user from continuing
+        // Incremental save is best-effort
+        _logger.warning(
+          'Incremental save failed for activity goals',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
     }
+
+    // Navigate to next screen
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SurveyDailyTargetsScreen(),
+        settings: RouteSettings(arguments: args),
+      ),
+    );
   }
 
   @override
@@ -206,21 +278,43 @@ class _SurveyActivityGoalsScreenState
 
               const SizedBox(height: 32),
 
-              // Activity Level Section
-              const Row(
+              // Activity Level Section - consistent header style
+              Row(
                 children: [
-                  Icon(
-                    SolarIconsBold.running,
-                    color: AppTheme.primaryBlue,
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      SolarIconsBold.running,
+                      color: AppTheme.primaryBlue,
+                      size: 24,
+                    ),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Current Activity Level',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Current Activity Level',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryBlue,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'How active are you?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -241,21 +335,43 @@ class _SurveyActivityGoalsScreenState
 
               const SizedBox(height: 32),
 
-              // Goals Section
-              const Row(
+              // Goals Section - consistent header style
+              Row(
                 children: [
-                  Icon(
-                    SolarIconsBold.target,
-                    color: AppTheme.primaryBlue,
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      SolarIconsBold.target,
+                      color: AppTheme.primaryBlue,
+                      size: 24,
+                    ),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Primary Fitness Goal',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Primary Fitness Goal',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryBlue,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'What do you want to achieve?',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

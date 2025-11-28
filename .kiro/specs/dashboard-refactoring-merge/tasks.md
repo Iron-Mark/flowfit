@@ -78,10 +78,12 @@
   - Update logout ListTile to call `_handleLogout(context)` instead of inline signOut
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [x] 4.1 Write property test for logout signOut call
+- [ ] 4.1 Write property test for logout signOut call
 
   - **Property 13: Logout confirmation triggers signOut**
   - **Validates: Requirements 8.2**
+
+-
 
 - [x] 4.2 Write unit tests for logout flow
 
@@ -121,7 +123,8 @@
   - Replace hardcoded profile data with actual profile data from provider
   - Handle loading, error, and empty states for profile async data
   - Add `_buildLoadingState()`, `_buildErrorState()`, `_buildEmptyState()` helper methods
-  - Show "Complete Onboarding" button in empty state that navigates to `/survey-intro`
+  - Show "Complete Onboarding"
+    button in empty state that navigates to `/survey-intro`
   - _Requirements: 10.4, 10.5_
 
 - [x] 6.1 Write property test for name extraction
@@ -176,7 +179,7 @@
   - **Property 11: Refresh invalidates providers**
   - **Validates: Requirements 6.2, 6.3**
 
-- [ ] 8.2 Write unit tests for refresh functionality
+- [x] 8.2 Write unit tests for refresh functionality
 
   - Test refresh triggers profile reload
   - Test refresh invalidates sync providers
@@ -191,19 +194,19 @@
   - Add mounted check before navigation
   - _Requirements: 9.1, 9.2, 9.3_
 
-- [ ] 9.1 Write property test for auth state redirect
+- [x] 9.1 Write property test for auth state redirect
 
   - **Property 14: Auth state change triggers redirect**
   - **Validates: Requirements 9.2**
 
-- [ ] 9.2 Write unit test for auth redirect
+- [x] 9.2 Write unit test for auth redirect
 
   - Test unauthenticated state triggers navigation
   - Test navigation clears stack
   - Test correct route is used
   - _Requirements: 9.1, 9.3_
 
-- [ ] 10. Remove unused imports from DashboardScreen
+- [x] 10. Remove unused imports from DashboardScreen
 
   - Keep imports for future use as requested by user
   - Verify all tab screen imports are present even if not directly used
@@ -214,7 +217,7 @@
 
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Integration testing and verification
+- [x] 12. Integration testing and verification
 
   - Test complete photo upload flow (camera → save → persist → reload)
   - Test complete logout flow (tap → confirm → signOut → navigate)
@@ -225,7 +228,7 @@
   - Verify no code duplication between old and new implementations
   - _Requirements: All_
 
-- [ ] 12.1 Write integration tests for end-to-end flows
+- [-] 12.1 Write integration tests for end-to-end flows
 
   - Test photo upload flow
   - Test logout flow

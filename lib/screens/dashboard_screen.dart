@@ -7,10 +7,16 @@ import 'health/health_screen.dart';
 import 'track/track_screen.dart';
 import 'progress/progress_screen.dart';
 import 'profile/profile_screen.dart';
+// Keep tab imports for future use
+// ignore: unused_import
 import 'dashboard/home_tab.dart';
+// ignore: unused_import
 import 'dashboard/health_tab.dart';
+// ignore: unused_import
 import 'dashboard/track_tab.dart';
+// ignore: unused_import
 import 'dashboard/progress_tab.dart';
+// ignore: unused_import
 import 'dashboard/profile_tab.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -69,7 +75,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final authState = ref.watch(authNotifierProvider);
 
     // Listen for auth state changes
     ref.listen(authNotifierProvider, (previous, next) {

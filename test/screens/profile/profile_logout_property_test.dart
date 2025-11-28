@@ -3,6 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowfit/screens/profile/profile_screen.dart';
 import 'package:flowfit/presentation/providers/providers.dart';
+import 'package:flowfit/presentation/providers/profile_providers.dart'
+    hide profileRepositoryProvider;
+import 'package:flowfit/presentation/notifiers/profile_notifier.dart';
+import 'package:flowfit/core/domain/repositories/profile_repository.dart';
+import 'package:flowfit/core/domain/entities/user_profile.dart' as core;
+import 'package:flowfit/domain/entities/user_profile.dart' as domain;
+import 'package:flowfit/domain/repositories/i_profile_repository.dart';
 import 'package:flowfit/domain/repositories/i_auth_repository.dart';
 import 'package:flowfit/domain/entities/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,11 +33,23 @@ void main() {
     ) async {
       // Create a mock auth repository that tracks signOut calls
       final mockAuthRepo = MockAuthRepositoryWithTracking();
+      final mockProfileRepo = MockProfileRepository();
+      final mockCoreProfileRepo = MockCoreProfileRepository();
 
       // Arrange: Build ProfileScreen with mock auth repository
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [authRepositoryProvider.overrideWithValue(mockAuthRepo)],
+          overrides: [
+            authRepositoryProvider.overrideWithValue(mockAuthRepo),
+            profileRepositoryProvider.overrideWithValue(mockProfileRepo),
+            profileNotifierProvider.overrideWith((ref, userId) {
+              return MockProfileNotifier(mockCoreProfileRepo, userId);
+            }),
+            syncStatusProvider.overrideWith(
+              (ref, userId) => Stream.value(SyncStatus.synced),
+            ),
+            pendingSyncCountProvider.overrideWith((ref) async => 0),
+          ],
           child: MaterialApp(
             home: const ProfileScreen(),
             routes: {
@@ -98,11 +117,23 @@ void main() {
       (WidgetTester tester) async {
         // Create a mock auth repository that tracks signOut calls
         final mockAuthRepo = MockAuthRepositoryWithTracking();
+        final mockProfileRepo = MockProfileRepository();
+        final mockCoreProfileRepo = MockCoreProfileRepository();
 
         // Arrange: Build ProfileScreen with mock auth repository
         await tester.pumpWidget(
           ProviderScope(
-            overrides: [authRepositoryProvider.overrideWithValue(mockAuthRepo)],
+            overrides: [
+              authRepositoryProvider.overrideWithValue(mockAuthRepo),
+              profileRepositoryProvider.overrideWithValue(mockProfileRepo),
+              profileNotifierProvider.overrideWith((ref, userId) {
+                return MockProfileNotifier(mockCoreProfileRepo, userId);
+              }),
+              syncStatusProvider.overrideWith(
+                (ref, userId) => Stream.value(SyncStatus.synced),
+              ),
+              pendingSyncCountProvider.overrideWith((ref) async => 0),
+            ],
             child: MaterialApp(
               home: const ProfileScreen(),
               routes: {
@@ -222,6 +253,136 @@ class MockAuthRepositoryWithTracking implements IAuthRepository {
         email: 'test@example.com',
         fullName: 'Test User',
         createdAt: DateTime.now(),
+      ),
+    );
+  }
+}
+
+/// Mock ProfileRepository for IProfileRepository interface
+class MockProfileRepository implements IProfileRepository {
+  @override
+  Future<domain.UserProfile> createProfile(domain.UserProfile profile) async {
+    return profile;
+  }
+
+  @override
+  Future<domain.UserProfile> updateProfile(domain.UserProfile profile) async {
+    return profile;
+  }
+
+  @override
+  Future<domain.UserProfile?> getProfile(String userId) async {
+    return domain.UserProfile(
+      userId: userId,
+      fullName: 'Test User',
+      age: 30,
+      gender: 'Male',
+      weight: 70.0,
+      weightUnit: 'kg',
+      height: 175.0,
+      heightUnit: 'cm',
+      activityLevel: 'Moderate',
+      goals: ['Fitness'],
+      dailyCalorieTarget: 2000,
+      surveyCompleted: true,
+    );
+  }
+
+  @override
+  Future<bool> hasCompletedSurvey(String userId) async {
+    return true;
+  }
+}
+
+/// Mock ProfileRepository for ProfileRepository (core domain)
+class MockCoreProfileRepository implements ProfileRepository {
+  final SyncStatus syncStatus;
+
+  MockCoreProfileRepository({this.syncStatus = SyncStatus.synced});
+
+  @override
+  Future<core.UserProfile?> getLocalProfile(String userId) async {
+    return core.UserProfile(
+      userId: userId,
+      fullName: 'Test User',
+      age: 30,
+      gender: 'Male',
+      weight: 70.0,
+      weightUnit: 'kg',
+      height: 175.0,
+      heightUnit: 'cm',
+      activityLevel: 'Moderate',
+      goals: ['Fitness'],
+      dailyCalorieTarget: 2000,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      isSynced: true,
+    );
+  }
+
+  @override
+  Future<void> saveLocalProfile(core.UserProfile profile) async {
+    // Mock save
+  }
+
+  @override
+  Future<void> deleteLocalProfile(String userId) async {
+    // Mock delete
+  }
+
+  @override
+  Future<core.UserProfile?> getBackendProfile(String userId) async {
+    return getLocalProfile(userId);
+  }
+
+  @override
+  Future<void> saveBackendProfile(core.UserProfile profile) async {
+    // Mock save
+  }
+
+  @override
+  Future<void> syncProfile(String userId) async {
+    // Mock sync
+  }
+
+  @override
+  Future<bool> hasPendingSync(String userId) async {
+    return false;
+  }
+
+  @override
+  Stream<SyncStatus> watchSyncStatus(String userId) {
+    return Stream.value(syncStatus);
+  }
+
+  @override
+  Future<bool> hasCompletedSurvey(String userId) async {
+    return true;
+  }
+}
+
+/// Mock ProfileNotifier
+class MockProfileNotifier extends ProfileNotifier {
+  MockProfileNotifier(super.repository, super.userId);
+
+  @override
+  Future<void> loadProfile() async {
+    state = AsyncValue.data(
+      core.UserProfile(
+        userId: userId,
+        fullName: 'Test User',
+        age: 30,
+        gender: 'Male',
+        weight: 70.0,
+        weightUnit: 'kg',
+        height: 175.0,
+        heightUnit: 'cm',
+        activityLevel: 'Moderate',
+        goals: ['Fitness'],
+        dailyCalorieTarget: 2000,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isSynced: true,
       ),
     );
   }

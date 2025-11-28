@@ -11,6 +11,12 @@ class UserProfile {
   final List<String> goals;
   final int dailyCalorieTarget;
   final bool surveyCompleted;
+  final String? heightUnit;
+  final String? weightUnit;
+  final int? dailyStepsTarget;
+  final int? dailyActiveMinutesTarget;
+  final double? dailyWaterTarget;
+  final String? profileImageUrl;
 
   const UserProfile({
     required this.userId,
@@ -23,6 +29,12 @@ class UserProfile {
     required this.goals,
     required this.dailyCalorieTarget,
     required this.surveyCompleted,
+    this.heightUnit,
+    this.weightUnit,
+    this.dailyStepsTarget,
+    this.dailyActiveMinutesTarget,
+    this.dailyWaterTarget,
+    this.profileImageUrl,
   });
 
   /// Creates a copy of this profile with the given fields replaced
@@ -37,6 +49,12 @@ class UserProfile {
     List<String>? goals,
     int? dailyCalorieTarget,
     bool? surveyCompleted,
+    String? heightUnit,
+    String? weightUnit,
+    int? dailyStepsTarget,
+    int? dailyActiveMinutesTarget,
+    double? dailyWaterTarget,
+    String? profileImageUrl,
   }) {
     return UserProfile(
       userId: userId ?? this.userId,
@@ -49,6 +67,13 @@ class UserProfile {
       goals: goals ?? this.goals,
       dailyCalorieTarget: dailyCalorieTarget ?? this.dailyCalorieTarget,
       surveyCompleted: surveyCompleted ?? this.surveyCompleted,
+      heightUnit: heightUnit ?? this.heightUnit,
+      weightUnit: weightUnit ?? this.weightUnit,
+      dailyStepsTarget: dailyStepsTarget ?? this.dailyStepsTarget,
+      dailyActiveMinutesTarget:
+          dailyActiveMinutesTarget ?? this.dailyActiveMinutesTarget,
+      dailyWaterTarget: dailyWaterTarget ?? this.dailyWaterTarget,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
 
@@ -66,7 +91,13 @@ class UserProfile {
           activityLevel == other.activityLevel &&
           _listEquals(goals, other.goals) &&
           dailyCalorieTarget == other.dailyCalorieTarget &&
-          surveyCompleted == other.surveyCompleted;
+          surveyCompleted == other.surveyCompleted &&
+          heightUnit == other.heightUnit &&
+          weightUnit == other.weightUnit &&
+          dailyStepsTarget == other.dailyStepsTarget &&
+          dailyActiveMinutesTarget == other.dailyActiveMinutesTarget &&
+          dailyWaterTarget == other.dailyWaterTarget &&
+          profileImageUrl == other.profileImageUrl;
 
   @override
   int get hashCode =>
@@ -79,11 +110,17 @@ class UserProfile {
       activityLevel.hashCode ^
       goals.hashCode ^
       dailyCalorieTarget.hashCode ^
-      surveyCompleted.hashCode;
+      surveyCompleted.hashCode ^
+      heightUnit.hashCode ^
+      weightUnit.hashCode ^
+      dailyStepsTarget.hashCode ^
+      dailyActiveMinutesTarget.hashCode ^
+      dailyWaterTarget.hashCode ^
+      profileImageUrl.hashCode;
 
   @override
   String toString() {
-    return 'UserProfile{userId: $userId, fullName: $fullName, age: $age, gender: $gender, weight: $weight, height: $height, activityLevel: $activityLevel, goals: $goals, dailyCalorieTarget: $dailyCalorieTarget, surveyCompleted: $surveyCompleted}';
+    return 'UserProfile{userId: $userId, fullName: $fullName, age: $age, gender: $gender, weight: $weight, height: $height, activityLevel: $activityLevel, goals: $goals, dailyCalorieTarget: $dailyCalorieTarget, surveyCompleted: $surveyCompleted, heightUnit: $heightUnit, weightUnit: $weightUnit, dailyStepsTarget: $dailyStepsTarget, dailyActiveMinutesTarget: $dailyActiveMinutesTarget, dailyWaterTarget: $dailyWaterTarget, profileImageUrl: $profileImageUrl}';
   }
 
   bool _listEquals(List<String> a, List<String> b) {

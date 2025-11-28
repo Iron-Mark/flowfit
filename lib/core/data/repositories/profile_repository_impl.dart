@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -46,9 +47,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
       if (jsonString == null) {
         _logger.warning('No local profile found for user: $userId (key: $key)');
-        // Debug: List all keys in SharedPreferences
-        final allKeys = _prefs.getKeys();
-        _logger.debug('All SharedPreferences keys: $allKeys');
+        // Debug: List all keys in SharedPreferences (development only)
+        if (kDebugMode) {
+          final allKeys = _prefs.getKeys();
+          _logger.debug('All SharedPreferences keys: $allKeys');
+        }
         return null;
       }
 

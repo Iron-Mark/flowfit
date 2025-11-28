@@ -198,24 +198,21 @@ try {
   }
 } catch (e) {
   if (mounted) {
-    String errorMessage = 'Failed to save profile. Please try again.';
-
-    if (e.toString().contains('network') || e.toString().contains('connection')) {
-      errorMessage = 'No internet connection. Your profile is saved locally and will sync when online.';
-    } else if (e.toString().contains('timeout')) {
-      errorMessage = 'Request timed out. Your profile is saved locally.';
-    }
+    final errorMessage = ErrorMessages.getUserMessage(e);
+    final isRetryable = ErrorMessages.isRetryable(e);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(errorMessage),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Retry',
-          textColor: Colors.white,
-          onPressed: _handleComplete,
-        ),
+        action: isRetryable
+            ? SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: _handleComplete,
+              )
+            : null,
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -437,8 +438,12 @@ class SyncQueueService {
 
   /// Calculate exponential backoff duration
   Duration _calculateBackoff(int retryCount) {
-    final multiplier = _backoffMultiplier * retryCount;
-    final seconds = _initialBackoff.inSeconds * multiplier;
+    if (retryCount == 0) {
+      return Duration.zero;
+    }
+    final seconds =
+        (_initialBackoff.inSeconds * pow(_backoffMultiplier, retryCount - 1))
+            .toInt();
     return Duration(seconds: seconds);
   }
 }

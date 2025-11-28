@@ -120,7 +120,7 @@ This feature involved refactoring the dashboard screen from a monolithic structu
 
 ### Requirement 8
 
-**User Story:** As a user, I want to logout of my account, so that I can secure my data when not using the app.
+**User Story:** As a user, I want to log out of my account, so that I can secure my data when not using the app.
 
 #### Acceptance Criteria
 

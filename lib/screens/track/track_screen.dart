@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../models/daily_stats.dart';
 import '../../models/recent_activity.dart';
+import '../../widgets/quick_mood_check_bottom_sheet.dart';
 
 class TrackScreen extends ConsumerWidget {
   const TrackScreen({super.key});
@@ -258,17 +259,29 @@ class TrackScreen extends ConsumerWidget {
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () => context.go('/active'),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (bottomSheetContext) => QuickMoodCheckBottomSheet(
+                  onMoodSelected: () {
+                    // Navigate to workout type selection after mood is selected
+                    Navigator.of(context).pushNamed('/workout/select-type');
+                  },
+                ),
+              );
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2D82E8), // Blue color
+              backgroundColor: const Color(0xFF3B82F6), // Updated to primary blue
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(16), // Updated to 16px border radius
               ),
               elevation: 0,
             ),
             child: const Text(
-              'Start a Workout',
+              'START WORKOUT',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),

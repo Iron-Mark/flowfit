@@ -63,6 +63,7 @@ import 'screens/wellness/wellness_tracker_page.dart';
 import 'screens/wellness/wellness_onboarding_screen.dart';
 import 'screens/wellness/wellness_settings_screen.dart';
 import 'widgets/debug_route_menu.dart';
+import 'features/yolo_camera/presentation/screens/yolo_debug_screen.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized before async operations
@@ -79,10 +80,10 @@ Future<void> main() async {
 
   // Initialize deep link handler
   DeepLinkHandler().initialize();
-  
+
   // Initialize SharedPreferences for wellness state persistence
   final sharedPreferences = await SharedPreferences.getInstance();
-  
+
   runApp(
     ProviderScope(
       overrides: [
@@ -98,10 +99,11 @@ class FlowFitPhoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String initialRoute = String.fromEnvironment(
-      'INITIAL_ROUTE',
-      defaultValue: '/',
-    );
+    // Use YOLO debug screen in debug builds, otherwise use environment variable or default
+    const bool kDebugMode = bool.fromEnvironment('dart.vm.product') == false;
+    final String initialRoute = kDebugMode
+        ? '/yolo-debug'
+        : const String.fromEnvironment('INITIAL_ROUTE', defaultValue: '/');
 
     return MultiProvider(
       providers: [
@@ -158,8 +160,8 @@ class FlowFitPhoneApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        initialRoute: initialRoute,
         routes: {
+          // Only include '/' route in non-debug mode to avoid conflict with 'home'
           '/': (context) => const SplashScreen(),
           '/loading': (context) => const LoadingScreen(),
           '/welcome': (context) => const WelcomeScreen(),
@@ -199,22 +201,30 @@ class FlowFitPhoneApp extends StatelessWidget {
           '/nutrition-goals': (context) => const NutritionGoalsScreen(),
           '/about-us': (context) => const AboutUsScreen(),
           // Workout flow routes
-          '/workout/select-type': (context) => const WorkoutTypeSelectionScreen(),
+          '/workout/select-type': (context) =>
+              const WorkoutTypeSelectionScreen(),
           '/workout/running/setup': (context) => const RunningSetupScreen(),
           '/workout/running/active': (context) => const ActiveRunningScreen(),
           '/workout/running/summary': (context) => const RunningSummaryScreen(),
           '/workout/running/share': (context) {
-            final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+            final args =
+                ModalRoute.of(context)?.settings.arguments
+                    as Map<String, dynamic>?;
             final session = args?['session'];
             return ShareAchievementScreen(session: session);
           },
           '/workout/walking/options': (context) => const WalkingOptionsScreen(),
-          '/workout/walking/mission': (context) => const MissionCreationScreen(missionType: MissionType.target),
+          '/workout/walking/mission': (context) =>
+              const MissionCreationScreen(missionType: MissionType.target),
           '/workout/walking/active': (context) => const ActiveWalkingScreen(),
           '/workout/walking/summary': (context) => const WalkingSummaryScreen(),
-          '/workout/resistance/select-split': (context) => const SplitSelectionScreen(),
-          '/workout/resistance/active': (context) => const ActiveResistanceScreen(),
-          '/workout/resistance/summary': (context) => const ResistanceSummaryScreen(),
+          '/workout/resistance/select-split': (context) =>
+              const SplitSelectionScreen(),
+          '/workout/resistance/active': (context) =>
+              const ActiveResistanceScreen(),
+          '/workout/resistance/summary': (context) =>
+              const ResistanceSummaryScreen(),
+          '/yolo-debug': (context) => const YoloDebugScreen(),
           '/wellness-tracker': (context) => const WellnessTrackerPage(),
           '/wellness-onboarding': (context) => const WellnessOnboardingScreen(),
           '/wellness-settings': (context) => const WellnessSettingsScreen(),

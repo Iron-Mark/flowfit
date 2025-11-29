@@ -19,6 +19,7 @@ dependencies:
   permission_handler: ^11.0.0 # Keep current - 12.x may have breaking changes
   wear_plus: ^1.2.0 # Wear OS support
   package_info_plus: ^8.3.1
+  camera: ^0.10.5+5 # For YOLO camera feature
 
   # State Management (Clean Architecture)
   flutter_riverpod: ^2.6.1 # SAFE UPGRADE: Bug fixes, no breaking changes
@@ -35,7 +36,7 @@ dependencies:
   wear: ^1.1.0
   wearable_rotary: ^2.0.3 # DISCONTINUED - consider removing if not used
   logger: ^2.4.0 # SAFE UPGRADE: Better logging
-  ultralytics_yolo: ^0.1.40
+  ultralytics_yolo: ^0.1.25
   tflite_flutter: ^0.12.1
   heart_bpm: ^2.0.0+0
 
@@ -62,6 +63,7 @@ dependencies:
   flutter_cache_manager: ^3.4.1 # For caching map tiles
   share_plus: ^10.1.2 # For sharing workout achievements
   image_picker: ^1.1.2 # For selecting background images for share cards
+  image: ^4.0.0 # For camera image conversion (YUV to RGB)
 
 flutter:
   assets:

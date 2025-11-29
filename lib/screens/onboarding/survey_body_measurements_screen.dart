@@ -4,6 +4,7 @@ import 'package:solar_icons/solar_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../presentation/providers/providers.dart';
 import '../../widgets/survey_app_bar.dart';
+import '../../core/utils/logger.dart';
 import 'survey_activity_goals_screen.dart';
 
 class SurveyBodyMeasurementsScreen extends ConsumerStatefulWidget {
@@ -21,11 +22,62 @@ class _SurveyBodyMeasurementsScreenState
   final _weightController = TextEditingController();
   String _heightUnit = 'cm';
   String _weightUnit = 'kg';
+  final _logger = Logger('SurveyBodyMeasurementsScreen');
 
   @override
   void initState() {
     super.initState();
-    // Load existing data if available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExistingData();
+    });
+  }
+
+  /// Load existing data from profile or survey state
+  /// Requirement 7.3: Ensure survey screens reflect profile data if returning
+  Future<void> _loadExistingData() async {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final userId = args?['userId'] as String?;
+
+    // First, try to load from existing profile if user is returning
+    if (userId != null) {
+      final profileAsync = ref.read(profileNotifierProvider(userId));
+      final profile = profileAsync.valueOrNull;
+
+      if (profile != null) {
+        // User has existing profile data - pre-populate from profile
+        if (profile.height != null) {
+          _heightController.text = profile.height.toString();
+        }
+        if (profile.weight != null) {
+          _weightController.text = profile.weight.toString();
+        }
+        if (profile.heightUnit != null) {
+          setState(() {
+            _heightUnit = profile.heightUnit!;
+          });
+        }
+        if (profile.weightUnit != null) {
+          setState(() {
+            _weightUnit = profile.weightUnit!;
+          });
+        }
+        // Update survey state with profile data
+        if (profile.height != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('height', profile.height);
+        }
+        if (profile.weight != null) {
+          ref
+              .read(surveyNotifierProvider.notifier)
+              .updateSurveyData('weight', profile.weight);
+        }
+        return;
+      }
+    }
+
+    // If no profile data, load from survey state
     final surveyState = ref.read(surveyNotifierProvider);
     final height = surveyState.surveyData['height'];
     if (height != null) {
@@ -35,6 +87,7 @@ class _SurveyBodyMeasurementsScreenState
     if (weight != null) {
       _weightController.text = weight.toString();
     }
+    setState(() {});
   }
 
   @override
@@ -51,6 +104,11 @@ class _SurveyBodyMeasurementsScreenState
     if (!_formKey.currentState!.validate()) {
       return;
     }
+
+    // Capture context-dependent values BEFORE any async operations
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final userId = args?['userId'] as String?;
 
     try {
       // Save data to survey notifier
@@ -78,18 +136,40 @@ class _SurveyBodyMeasurementsScreenState
         return;
       }
 
-      // Navigate to next screen
-      if (mounted) {
-        final args =
-            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const SurveyActivityGoalsScreen(),
-            settings: RouteSettings(arguments: args),
-          ),
-        );
+      // Incremental save: Save partial profile data to local storage
+      // This ensures data persists if user navigates away
+      // Requirement 1.1, 1.2: Save data locally on each step
+      if (userId != null) {
+        try {
+          final handler = await ref.read(
+            surveyCompletionHandlerProvider.future,
+          );
+          final surveyData = ref.read(surveyNotifierProvider).surveyData;
+
+          // Save partial profile data incrementally
+          // This won't clear survey state, just persists to profile storage
+          await handler.completeSurvey(userId, surveyData);
+          _logger.info('Incremental save successful for body measurements');
+        } catch (e, stackTrace) {
+          // Log error but don't block user from continuing
+          // Incremental save is best-effort
+          _logger.warning(
+            'Incremental save failed for body measurements',
+            error: e,
+            stackTrace: stackTrace,
+          );
+        }
       }
+
+      // Navigate to next screen
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SurveyActivityGoalsScreen(),
+          settings: RouteSettings(arguments: args),
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -238,60 +318,12 @@ class _SurveyBodyMeasurementsScreenState
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Container(
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.grey[200]!,
-                                    ),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _heightUnit,
-                                      isExpanded: true,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                      dropdownColor: Colors.white,
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: AppTheme.primaryBlue,
-                                      ),
-                                      style: const TextStyle(
-                                        color: AppTheme.text,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                      items: ['cm', 'ft'].map((String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                SolarIconsBold.ruler,
-                                                size: 16,
-                                                color: _heightUnit == value
-                                                    ? AppTheme.primaryBlue
-                                                    : Colors.grey,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(value),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? newValue) {
-                                        if (newValue != null) {
-                                          setState(
-                                            () => _heightUnit = newValue,
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ),
+                                child: _buildUnitToggle(
+                                  value: _heightUnit,
+                                  option1: 'cm',
+                                  option2: 'ft',
+                                  onChanged: (value) =>
+                                      setState(() => _heightUnit = value),
                                 ),
                               ),
                             ],
@@ -360,60 +392,12 @@ class _SurveyBodyMeasurementsScreenState
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Container(
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.grey[200]!,
-                                    ),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _weightUnit,
-                                      isExpanded: true,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                      dropdownColor: Colors.white,
-                                      icon: const Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color: AppTheme.primaryBlue,
-                                      ),
-                                      style: const TextStyle(
-                                        color: AppTheme.text,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
-                                      items: ['kg', 'lbs'].map((String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                SolarIconsBold.dumbbellSmall,
-                                                size: 16,
-                                                color: _weightUnit == value
-                                                    ? AppTheme.primaryBlue
-                                                    : Colors.grey,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(value),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? newValue) {
-                                        if (newValue != null) {
-                                          setState(
-                                            () => _weightUnit = newValue,
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  ),
+                                child: _buildUnitToggle(
+                                  value: _weightUnit,
+                                  option1: 'kg',
+                                  option2: 'lbs',
+                                  onChanged: (value) =>
+                                      setState(() => _weightUnit = value),
                                 ),
                               ),
                             ],
@@ -453,6 +437,77 @@ class _SurveyBodyMeasurementsScreenState
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildUnitToggle({
+    required String value,
+    required String option1,
+    required String option2,
+    required void Function(String) onChanged,
+  }) {
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(option1),
+              child: Container(
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: value == option1
+                      ? AppTheme.primaryBlue
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    option1,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: value == option1
+                          ? Colors.white
+                          : AppTheme.primaryBlue,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(option2),
+              child: Container(
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: value == option2
+                      ? AppTheme.primaryBlue
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    option2,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: value == option2
+                          ? Colors.white
+                          : AppTheme.primaryBlue,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

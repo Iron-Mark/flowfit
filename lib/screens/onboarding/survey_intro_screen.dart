@@ -328,11 +328,10 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen>
                               ),
                             ),
                             child: const Text(
-                              'LET\'S PERSONALIZE',
+                              'Let\'s Personalize',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
@@ -367,11 +366,10 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen>
                             ),
                           ),
                           child: const Text(
-                            'I\'LL DO THIS LATER →',
+                            'I\'ll Do This Later →',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
                             ),
                           ),
                         ),

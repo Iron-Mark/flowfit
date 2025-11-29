@@ -67,6 +67,7 @@ flutter:
   assets:
     - assets/model/activity_tracker.tflite
     - assets/images/
+    - assets/flowy.svg
     - assets/flowfit_logo.svg
     - assets/flowfit_logo_header.svg
   uses-material-design: true # FIX: Enable material icons

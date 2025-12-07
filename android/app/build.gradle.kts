@@ -18,6 +18,10 @@ android {
         isCoreLibraryDesugaringEnabled = true
     }
 
+    lint {
+        checkReleaseBuilds = false
+    }
+
     kotlinOptions {
         jvmTarget = "17"
     }

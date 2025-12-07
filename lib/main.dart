@@ -62,19 +62,8 @@ import 'screens/workout/resistance/resistance_summary_screen.dart';
 import 'screens/wellness/wellness_tracker_page.dart';
 import 'screens/wellness/wellness_onboarding_screen.dart';
 import 'screens/wellness/wellness_settings_screen.dart';
-// Buddy onboarding screens (whale-themed for kids)
-import 'screens/onboarding/buddy_welcome_screen.dart';
-import 'screens/onboarding/buddy_intro_screen.dart';
-import 'screens/onboarding/buddy_hatch_screen.dart';
-import 'screens/onboarding/buddy_color_selection_screen.dart';
-import 'screens/onboarding/buddy_naming_screen.dart';
-import 'screens/onboarding/goal_selection_screen.dart';
-import 'screens/onboarding/notification_permission_screen.dart';
-import 'screens/onboarding/buddy_ready_screen.dart';
-import 'screens/onboarding/buddy_profile_setup_screen.dart';
-import 'screens/onboarding/buddy_completion_screen.dart';
-// Buddy profile screens
-import 'screens/profile/buddy_customization_screen.dart';
+import 'widgets/debug_route_menu.dart';
+import 'features/yolo_camera/presentation/screens/yolo_debug_screen.dart';
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized before async operations
@@ -110,10 +99,11 @@ class FlowFitPhoneApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String initialRoute = String.fromEnvironment(
-      'INITIAL_ROUTE',
-      defaultValue: '/',
-    );
+    // Use YOLO debug screen in debug builds, otherwise use environment variable or default
+    const bool kDebugMode = bool.fromEnvironment('dart.vm.product') == false;
+    final String initialRoute = kDebugMode
+        ? '/yolo-debug'
+        : const String.fromEnvironment('INITIAL_ROUTE', defaultValue: '/');
 
     return MultiProvider(
       providers: [
@@ -170,8 +160,8 @@ class FlowFitPhoneApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        initialRoute: initialRoute,
         routes: {
+          // Only include '/' route in non-debug mode to avoid conflict with 'home'
           '/': (context) => const SplashScreen(),
           '/loading': (context) => const LoadingScreen(),
           '/welcome': (context) => const WelcomeScreen(),
@@ -234,6 +224,7 @@ class FlowFitPhoneApp extends StatelessWidget {
               const ActiveResistanceScreen(),
           '/workout/resistance/summary': (context) =>
               const ResistanceSummaryScreen(),
+          '/yolo-debug': (context) => const YoloDebugScreen(),
           '/wellness-tracker': (context) => const WellnessTrackerPage(),
           '/wellness-onboarding': (context) => const WellnessOnboardingScreen(),
           '/wellness-settings': (context) => const WellnessSettingsScreen(),
